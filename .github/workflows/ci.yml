@@ -1,0 +1,37 @@
+name: Foundation CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify Foundation
+        run: npm run verify
+
+      - name: Upload runtime pack
+        uses: actions/upload-artifact@v4
+        with:
+          name: hmp-foundation
+          path: build/hmp-foundation
+          if-no-files-found: error

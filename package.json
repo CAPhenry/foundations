@@ -1,0 +1,15 @@
+{
+  "name": "hogwarts-mp-foundation",
+  "version": "0.1.0",
+  "private": true,
+  "license": "SEE LICENSE IN LICENSE",
+  "workspaces": [
+    "resources/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "package": "node scripts/package.mjs",
+    "verify": "npm test && npm run typecheck --workspaces --if-present && npm run build && npm run smoke --workspaces --if-present && npm run package"
+  }
+}
