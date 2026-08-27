@@ -1,0 +1,6 @@
+.git
+.github
+build
+node_modules
+resources/*/dist
+resources/*/node_modules

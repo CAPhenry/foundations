@@ -28,6 +28,10 @@ npm run package
 `npm run package` writes a ready-to-load pack under `build/hmp-foundation/resources/`. Runtime
 artifacts contain bundled dependencies: server owners do not run npm inside the game-server image.
 
+The repository also publishes `ghcr.io/<owner>/<repository>:edge` from `main` and versioned tags
+from releases. This resource-pack image is build input for the runnable Foundation server variant;
+server owners normally use that server image or the downloadable ZIP instead of pulling it directly.
+
 ## Versioning
 
 Foundation releases have one pack version, while every resource retains its own manifest version.
