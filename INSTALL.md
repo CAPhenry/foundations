@@ -6,15 +6,16 @@ unit: install all twenty-two `hmp-*` resources from the same release and upgrade
 ## Before you begin
 
 In this guide, `<server-root>` means the working directory used to launch the dedicated server. It is
-normally the directory containing `HogwartsMPServer.exe` and must contain the `resources` and `data`
-directories described below.
+normally the directory containing `HogwartsMPServer.exe` on Windows or `HogwartsMPServer` on Linux,
+and must contain the `resources` and `data` directories described below.
 
 You need:
 
 - a compatible HogwartsMP dedicated server from the [compatibility matrix](COMPATIBILITY.md);
 - MySQL 8.x or MariaDB 10.6 or newer;
 - permission to create an empty database and a database-scoped user;
-- Windows clients using the supported Hogwarts Legacy build.
+- Windows clients using the supported Hogwarts Legacy build. The game client remains Windows-only;
+  the dedicated server may run on Windows x64 or Linux x86-64.
 
 Node.js, npm, TypeScript, and this source repository are not required when installing a release ZIP.
 Release resources already contain their bundled JavaScript dependencies.
@@ -39,7 +40,8 @@ The result must look like this:
 
 ```text
 <server-root>/
-├── HogwartsMPServer.exe
+├── HogwartsMPServer.exe      # Windows
+│   or HogwartsMPServer       # Linux
 ├── data/
 └── resources/
     ├── hmp-mysql/
@@ -58,6 +60,21 @@ Do not leave an extra nesting level such as
 `<server-root>/resources/hmp-foundation/resources/hmp-core`. There should be exactly twenty-two
 top-level `hmp-*` directories.
 
+On Linux, resource and configuration names are case-sensitive. Preserve names such as `hmp-core`
+and `data/hmp-mysql.json` exactly.
+
+For example, after extracting the release on Linux:
+
+```sh
+sudo mkdir -p /opt/hogwartsmp/resources /opt/hogwartsmp/data
+sudo cp -a hmp-foundation/resources/hmp-* /opt/hogwartsmp/resources/
+sudo chmod +x /opt/hogwartsmp/HogwartsMPServer
+```
+
+Replace `/opt/hogwartsmp` with the actual server root. Run the server as a dedicated, unprivileged
+service account and make that account the owner of the server's writable `data` and `logs`
+directories. Do not solve permission errors with `chmod -R 777`.
+
 If this server previously used the demonstration resources from the main mod repository, remove or
 disable the overlapping resources listed under [Existing-resource overlap](#existing-resource-overlap).
 Loading both stacks causes duplicate commands, selectors, input handlers, UI, and conflicting state.
@@ -65,6 +82,12 @@ Loading both stacks causes duplicate commands, selectors, input handlers, UI, an
 ## 3. Install the configuration
 
 Copy the contents of the release's `examples/config/data` directory into `<server-root>/data`.
+
+On Linux, from the directory containing the extracted `hmp-foundation` folder:
+
+```sh
+sudo cp -a hmp-foundation/examples/config/data/. /opt/hogwartsmp/data/
+```
 
 At minimum:
 
@@ -103,7 +126,7 @@ Launch the server with `<server-root>` as its working directory. Relative paths 
 `data/hmp-mysql.json` are resolved from that directory, not from the executable's original location
 or the Foundation repository.
 
-For a direct Windows launch:
+### Windows launch
 
 ```powershell
 Set-Location C:\HogwartsMPServer
@@ -112,8 +135,63 @@ $env:HMP_ADMIN_BOOTSTRAP_SECRET = "REPLACE_WITH_A_LONG_RANDOM_SECRET"
 ```
 
 If using a shortcut, set its **Start in** field to `<server-root>`. If using a service or process
-manager, configure its working directory and environment there. Ensure MySQL/MariaDB is already ready
-before starting HogwartsMP.
+manager, configure its working directory and environment there.
+
+### Linux launch
+
+For a direct shell launch:
+
+```sh
+cd /opt/hogwartsmp
+export HMP_ADMIN_BOOTSTRAP_SECRET='REPLACE_WITH_A_LONG_RANDOM_SECRET'
+./HogwartsMPServer
+```
+
+The `export` lasts only for that shell. For a persistent server, use a service manager and store
+secrets outside the release directory. A minimal systemd unit looks like this:
+
+```ini
+[Unit]
+Description=HogwartsMP dedicated server
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=hogwartsmp
+Group=hogwartsmp
+WorkingDirectory=/opt/hogwartsmp
+EnvironmentFile=/etc/hogwartsmp/foundation.env
+ExecStart=/opt/hogwartsmp/HogwartsMPServer
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Save the unit as `/etc/systemd/system/hogwartsmp.service`. Create its environment file as root-owned,
+group-readable by the service account, and populate it with plain `KEY=value` lines based on
+`examples/config/environment.example`:
+
+```sh
+sudo install -d -o root -g hogwartsmp -m 0750 /etc/hogwartsmp
+sudo install -o root -g hogwartsmp -m 0640 /dev/null /etc/hogwartsmp/foundation.env
+sudoedit /etc/hogwartsmp/foundation.env
+sudo systemctl daemon-reload
+sudo systemctl enable --now hogwartsmp.service
+sudo journalctl -u hogwartsmp.service -f
+```
+
+The example assumes a `hogwartsmp` system user and group already exist. Create them with the
+distribution's normal account-management tools, then give that account write access to the server's
+`data` and `logs` directories. Do not place `sudo` in `ExecStart`, and do not run the game server as
+root. If the distribution does not use systemd, apply the same working-directory, environment, user,
+and restart policy in its service manager.
+
+On either operating system, ensure MySQL/MariaDB is already accepting connections before starting
+HogwartsMP. A process manager must preserve `<server-root>` as the working directory; locating the
+executable by absolute path is not sufficient by itself.
 
 The current HogwartsMP loader discovers resources automatically. Manifests and dependencies establish
 the supported order:
@@ -200,6 +278,9 @@ Use [CLOSED_TESTING.md](CLOSED_TESTING.md) for the full functional test pass.
 | Commands print `No character is active` | The player has not selected a Foundation character. | Run `/characters`, select or create a character, then retry. |
 | Duplicate UI, commands, or input behavior | Legacy/mod demonstration resources are loaded with Foundation. | Make `<server-root>/resources` Foundation-only or use an explicit allowlist. |
 | Configuration changes have no effect | The wrong data directory is being read or the server was not restarted. | Confirm the process working directory, file name, JSON validity, environment overrides, and restart server/client resources. |
+| Linux reports `Permission denied` | The binary is not executable or the service user cannot read/write the required path. | Run `chmod +x HogwartsMPServer`, inspect ownership with `ls -la`, and grant the service account access to `data` and `logs`; never use world-writable permissions. |
+| Linux reports a missing shared library | The wrong server archive was installed or a required library is absent. | Install the native Linux x86-64 server package and run `ldd ./HogwartsMPServer` from `<server-root>`; the HogwartsMP distribution should include its matching `libnode.so`. |
+| A resource works on Windows but is missing on Linux | A path changed case or used Windows separators. | Compare resource/config names exactly and use `/` in Linux paths. |
 
 If startup still fails, capture the first Foundation error—not only later dependency failures—plus the
 sanitized MySQL target, pack version, database version, and relevant rows from `hmp_schema_migrations`.

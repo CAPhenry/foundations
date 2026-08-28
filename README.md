@@ -10,6 +10,7 @@ the server scripting layer built on top of that runtime.
 Installing a server? Start with [INSTALL.md](INSTALL.md). It covers the directory layout,
 [database creation and credentials](DATABASE.md), configuration, first boot, and troubleshooting.
 Release ZIPs are prebuilt; server owners do not need Node.js, npm, TypeScript, or this source tree.
+The dedicated server may run on Windows x64 or Linux x86-64; Hogwarts Legacy clients remain Windows.
 
 ## Resources
 

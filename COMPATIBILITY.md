@@ -13,6 +13,8 @@ upstream release identifier.
 | Source build | Node.js 22 or newer and npm | Supported | `npm ci` followed by `npm run verify`. |
 | Database | MySQL 8.x | Supported | `utf8mb4`, UTC, transactional InnoDB tables recommended. |
 | Database | MariaDB 10.6 or newer | Supported | Validate a production replica before changing database families. |
+| Dedicated server OS | Windows x64 | Supported | Use the Windows server archive and `HogwartsMPServer.exe`. |
+| Dedicated server OS | Linux x86-64 | Supported | Use the native Linux server archive and `HogwartsMPServer`; do not use the Windows binary through Wine. |
 | Client OS | Windows x64 | Supported | Matches the current Hogwarts Legacy/HogwartsMP client. |
 
 ## Required scripting capabilities

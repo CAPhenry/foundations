@@ -1,8 +1,9 @@
 # Example Foundation configuration
 
 Copy the contents of `data` to `<server-root>/data`, where `<server-root>` is the working directory
-used to launch `HogwartsMPServer.exe`. Edit the copies; these are safe starting values, not production
-secrets. See the top-level `INSTALL.md` and `DATABASE.md` for the complete setup procedure.
+used to launch `HogwartsMPServer.exe` on Windows or `HogwartsMPServer` on Linux. Edit the copies;
+these are safe starting values, not production secrets. See the top-level `INSTALL.md` and
+`DATABASE.md` for the complete setup procedure.
 
 Configuration files are provided for resources with file-backed settings. `hmp-lib`, `hmp-ui`,
 `hmp-banking`, `hmp-interact`, `hmp-shops`, and `hmp-jobs` use built-in defaults and registration APIs;

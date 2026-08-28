@@ -32,6 +32,8 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
 
 - Reworked the release installation documentation around a no-tooling server-owner path, with explicit
   MySQL/MariaDB and Docker setup, working-directory/layout examples, first-boot checks, and troubleshooting.
+- Added parallel Windows and Linux dedicated-server instructions, including native paths, shell
+  environment setup, filesystem permissions, systemd configuration, and Linux-specific troubleshooting.
 - `hmp-characters` now uses the original HogwartsMP wardrobe-style selector, progressively renders
   saved looks through the Framework `Portrait` API, caches matching appearances, and falls back to initials.
 - `hmp-pvp` now owns a configurable server-wide lethal mode, staff commands, late-join targeting/team

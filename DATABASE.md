@@ -66,7 +66,7 @@ Choose either environment variables or a JSON file. Environment values override 
 
 ### Environment variables
 
-Set a connection URL in the process that launches `HogwartsMPServer.exe`:
+Set a connection URL in the process that launches the HogwartsMP dedicated server:
 
 ```text
 HMP_MYSQL_URL=mysql://hogwartsmp:REPLACE_GAME_PASSWORD@127.0.0.1:3306/hogwartsmp
@@ -84,8 +84,8 @@ HMP_MYSQL_DATABASE=hogwartsmp
 ```
 
 The supplied `environment.example` is documentation only. Foundation does not automatically load
-`.env` files. Add these values to the Windows service, process manager, container configuration, or
-the shell that actually starts the server.
+`.env` files. Add these values to the Windows/Linux service, process manager, container configuration,
+or the shell that actually starts the server.
 
 For a one-session PowerShell launch, environment variables can be set immediately before the server:
 
@@ -97,6 +97,18 @@ $env:HMP_MYSQL_URL = "mysql://hogwartsmp:REPLACE_GAME_PASSWORD@127.0.0.1:3306/ho
 
 Closing that PowerShell window discards the variables. A production service must define them in its
 own service/container configuration.
+
+For a one-session Linux shell launch:
+
+```sh
+cd /opt/hogwartsmp
+export HMP_MYSQL_URL='mysql://hogwartsmp:REPLACE_GAME_PASSWORD@127.0.0.1:3306/hogwartsmp'
+./HogwartsMPServer
+```
+
+Closing that shell discards the variable. For systemd, put the individual `HMP_MYSQL_*` values in the
+protected `EnvironmentFile` described in [INSTALL.md](INSTALL.md#linux-launch). This avoids URL-encoding
+surprises and keeps credentials out of the unit file.
 
 ### JSON configuration
 
@@ -121,7 +133,15 @@ Alternatively, create `<server-root>/data/hmp-mysql.json`:
 ```
 
 Restrict access to this file because it contains a database password. `<server-root>` means the
-server process's working directory, normally the directory containing `HogwartsMPServer.exe`.
+server process's working directory, normally the directory containing `HogwartsMPServer.exe` on
+Windows or `HogwartsMPServer` on Linux. On Linux, make the file readable only by the service account:
+
+```sh
+sudo chown hogwartsmp:hogwartsmp /opt/hogwartsmp/data/hmp-mysql.json
+sudo chmod 600 /opt/hogwartsmp/data/hmp-mysql.json
+```
+
+Replace `hogwartsmp:hogwartsmp` when the service uses a different account.
 
 For a remote database with a publicly trusted TLS certificate, set `ssl` or `HMP_MYSQL_SSL` to `true`.
 Foundation then requires certificate verification; do not disable verification to work around an
@@ -155,7 +175,7 @@ Back up both the database and `<server-root>/data/hmp-*.json` before every Found
 logical backup is:
 
 ```sh
-mysqldump --host=127.0.0.1 --port=3306 --user=hogwartsmp --password --single-transaction hogwartsmp > hogwartsmp-backup.sql
+mysqldump --host=127.0.0.1 --port=3306 --user=hogwartsmp --password --single-transaction --result-file=hogwartsmp-backup.sql hogwartsmp
 ```
 
 MariaDB users can use `mariadb-dump` with the equivalent options. Follow the database provider's
