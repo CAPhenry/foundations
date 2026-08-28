@@ -1,0 +1,30 @@
+import clientModule = require("./doors");
+
+declare const Doors: {
+    setLock(lockId: string, unlocked?: boolean): boolean;
+    superAlohomora(enable?: boolean): boolean;
+    list(radius?: number): Array<{ name: string; cls: string; dist: number; bearing: number }>;
+    openNearby(radius?: number): number;
+    unlockNearby(radius?: number): number;
+    setOpen(name: string, open?: boolean): boolean;
+    setPolicy(policy: { unlockAll?: boolean; unlockDoors?: string[]; unlockAllExcept?: string[] }): void;
+};
+
+const { createDoorClient } = clientModule;
+const client = createDoorClient({
+    doors: Doors,
+    events: Events,
+    notify: (message: string) => Game.notify(message),
+    log: (message: string) => console.info(message),
+});
+
+Exports.register("status", client.status);
+Exports.register("list", client.list);
+
+Events.on("hmp-doors:policy", client.apply);
+Events.on("hmp-doors:diagnostic", client.diagnostic);
+Events.on("resourceStop", (name?: string) => {
+    if (!name || name === "hmp-doors") client.stop();
+});
+
+console.info("[hmp-doors] client door policy coordinator ready");

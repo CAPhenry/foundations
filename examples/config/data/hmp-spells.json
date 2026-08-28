@@ -1,0 +1,26 @@
+{
+  "command": "spells",
+  "enableCommands": true,
+  "adminGroups": [
+    {
+      "key": "admin",
+      "minimumGrade": 1
+    }
+  ],
+  "maxCastReportsPerSecond": 12,
+  "rules": [
+    {
+      "id": "closed-testing-starter",
+      "resource": "hmp-spells",
+      "priority": 1000,
+      "action": "allow",
+      "spells": [
+        "Lumos",
+        "Revelio",
+        "Accio",
+        "Levioso",
+        "Incendio"
+      ]
+    }
+  ]
+}

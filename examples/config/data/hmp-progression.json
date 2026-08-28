@@ -1,0 +1,13 @@
+{
+  "enableCommands": true,
+  "command": "progression",
+  "adminGroups": [
+    {
+      "key": "admin",
+      "minimumGrade": 1
+    }
+  ],
+  "maximumExperience": 100000000,
+  "maximumTalentPoints": 100,
+  "nativeRequestTimeoutMs": 8000
+}

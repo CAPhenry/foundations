@@ -4,6 +4,9 @@ Shared, promise-based SQL access for HMP Foundation resources. It uses a connect
 MySQL protocol, so it supports both **MySQL 8** and current **MariaDB** servers. It is not affiliated
 with Overextended and does not claim drop-in `oxmysql` compatibility.
 
+Server operators should follow the pack's [database setup guide](../../DATABASE.md) for database/user
+creation, Docker deployment, credentials, first-boot migrations, backups, and troubleshooting.
+
 `hmp-mysql` is server-only. SQLite is deliberately outside this resource: its embedded deployment,
 locking model and SQL behavior are different enough to deserve a future `hmp-sqlite` resource.
 HogwartsMP's built-in `Storage` remains the zero-configuration choice for simple key/value state.
@@ -61,7 +64,7 @@ Multiple SQL statements are always disabled.
 Declare the dependency so `hmp-mysql` starts first:
 
 ```json
-"resourceDependencies": [{ "name": "hmp-mysql", "version": ">=1.0.0" }]
+"resourceDependencies": [{ "name": "hmp-mysql", "version": "0.1.0" }]
 ```
 
 Then import its exports:
@@ -117,6 +120,36 @@ await MySQL.transaction([
     { query: "UPDATE accounts SET gold = gold + ? WHERE id = ?", values: [cost, sellerId] },
 ]);
 ```
+
+## Resource-owned migrations
+
+Each resource owns a monotonically versioned migration list. `migrate` serializes concurrent starts
+with a MySQL advisory lock, records checksums in `hmp_schema_migrations`, skips applied versions, and
+refuses to continue if an applied migration was edited later.
+
+```js
+await MySQL.migrate("my-resource", [
+    {
+        version: 1,
+        name: "create characters",
+        up: `CREATE TABLE IF NOT EXISTS characters (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(80) NOT NULL
+        ) ENGINE=InnoDB`,
+    },
+    {
+        version: 2,
+        name: "index character names",
+        statements: [
+            "CREATE INDEX idx_characters_name ON characters (name)",
+        ],
+    },
+]);
+```
+
+MySQL and MariaDB implicitly commit many DDL statements. Schema migrations must therefore be
+rerunnable—prefer `IF NOT EXISTS` and avoid mixing destructive data rewrites with DDL in one version.
+The ledger row is written only after every statement succeeds.
 
 Failures reject the Promise. Transactions roll back and rethrow the original error. `ready()` is the
 exception: it returns `false` when disabled or unreachable, making it suitable for health checks.

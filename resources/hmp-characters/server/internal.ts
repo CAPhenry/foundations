@@ -1,0 +1,43 @@
+import type { HmpCore, HmpCoreCharacter, HmpCoreSession } from "../../hmp-core/types";
+import type { HmpLogger } from "../../hmp-lib/types";
+
+export type Player = HogwartsMpPlayer;
+export type Core = HmpCore<Player>;
+
+export interface CharacterConfig extends Record<string, unknown> {
+    autoOpenOnJoin: boolean;
+    allowDelete: boolean;
+    allowCloseWithActiveCharacter: boolean;
+    command: string;
+    appearancePollMs: number;
+    appearanceTimeoutMs: number;
+    title: string;
+    subtitle: string;
+}
+
+export interface CharacterEvents {
+    emit(eventName: string, payload: unknown): unknown;
+}
+
+export interface CharacterFlowOptions {
+    core: Core;
+    events?: CharacterEvents | null;
+    logger?: Pick<HmpLogger, "warn" | "error">;
+    config?: Partial<CharacterConfig>;
+    sleep?: (milliseconds: number) => Promise<void>;
+}
+
+export interface CharacterEventPayload {
+    session: HmpCoreSession<Player>;
+    character: HmpCoreCharacter;
+}
+
+export interface CharacterOpenOptions {
+    mode?: string;
+    autoCreate?: boolean;
+}
+
+export interface CharacterNameInput {
+    first?: unknown;
+    last?: unknown;
+}

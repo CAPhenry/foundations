@@ -1,15 +1,15 @@
 {
   "name": "hmp-mysql",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "private": true,
   "author": "HogwartsMP",
   "description": "Shared promise-based MySQL and MariaDB access for HogwartsMP server resources.",
   "license": "SEE LICENSE IN LICENSE",
   "main": "dist/main.js",
   "scripts": {
-    "build": "esbuild server/main.js --bundle --platform=node --target=node22 --format=cjs --outfile=dist/main.js --legal-comments=inline",
-    "test": "node test/database.test.js",
-    "typecheck": "tsc --noEmit --strict --skipLibCheck --lib ES2020 types.d.ts",
+    "build": "esbuild server/main.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/main.js --legal-comments=inline && esbuild client/main.ts --bundle --platform=browser --target=es2022 --format=iife --outfile=dist/client.js --legal-comments=inline",
+    "test": "tsx test/database.test.ts",
+    "typecheck": "tsc -p tsconfig.json",
     "smoke": "node test/bundle.test.js"
   },
   "dependencies": {
@@ -21,6 +21,7 @@
   },
   "mafiahub": {
     "server": "dist/main.js",
+    "client": "dist/client.js",
     "priority": -1000,
     "errorBehavior": "stop",
     "exports": [
@@ -31,6 +32,7 @@
       "insert",
       "update",
       "transaction",
+      "migrate",
       "ready",
       "status"
     ]

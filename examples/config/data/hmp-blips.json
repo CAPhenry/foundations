@@ -1,0 +1,11 @@
+{
+  "defaultTtl": 600,
+  "maxTtl": 0,
+  "maxMarkersPerResource": 256,
+  "showAllPlayers": true,
+  "houseTint": true,
+  "playerBlipScale": 1,
+  "hideBaseIcon": false,
+  "enableCommands": true,
+  "command": "blips"
+}

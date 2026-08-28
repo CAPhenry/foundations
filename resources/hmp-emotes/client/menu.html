@@ -1,0 +1,613 @@
+<!doctype html>
+<!--
+  hmp-emotes — the Arcanum emote browser. Rows come from the generated emote_assets.json catalog.
+
+  native -> page : em:focus {}
+  native -> page : em:dump { text }
+  page -> native : ready {} · play { path, alias } · preview { path, kind } · previewToggle { on }
+  native -> page : em:favs { paths } · em:aliases { aliases, canEdit }
+                 · previewTune { tune } · previewDump {} · place { path, alias, kind, channel }
+                 · favToggle { path } · aliasSet { path, alias, kind, channel }
+                 · stop {} · close {}
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Spectral:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --card: #16120b; --well: #0e0b07;
+        --accent: #c9a25a; --bright: #d8b56b;
+        --heading: #f0e3c2; --body: #d5c8a9; --muted: #9c8f74;
+        --hair: rgba(201, 162, 90, 0.14);
+        --cinzel: "Cinzel", Georgia, serif;
+        --spectral: "Spectral", Georgia, serif;
+        --row: 26px;
+      }
+      * { box-sizing: border-box; }
+      /* .head/.row set display:grid, which outranks the UA rule behind the hidden attribute. */
+      [hidden] { display: none !important; }
+      html, body { margin: 0; height: 100%; }
+      /* Only the panel is painted — the rest stays clear so you can watch the emote play. */
+      body { font-family: var(--spectral); color: var(--body); background: transparent; }
+
+      #panel {
+        position: fixed; top: 0; right: 0; bottom: 0; width: min(760px, 54vw);
+        display: flex; flex-direction: column; padding: 20px 22px 16px;
+        background: linear-gradient(to left, rgba(8, 6, 4, 0.96), rgba(8, 6, 4, 0.9));
+        border-left: 1px solid var(--hair); box-shadow: -24px 0 60px rgba(0, 0, 0, 0.45);
+      }
+      .eyebrow { font-family: var(--cinzel); font-size: 10px; letter-spacing: 0.32em; color: #b89a64; text-transform: uppercase; }
+      h1 { font-family: var(--cinzel); font-weight: 600; font-size: 24px; letter-spacing: 0.06em; color: var(--heading); margin: 6px 0 4px; }
+      .hint { font-size: 12px; color: var(--muted); margin: 0 0 14px; line-height: 1.5; }
+      .hint kbd { font-family: var(--cinzel); font-size: 10px; letter-spacing: 0.08em; color: var(--body);
+        border: 1px solid var(--hair); border-radius: 3px; padding: 1px 5px; }
+      .hint .lit { color: var(--bright); font-weight: 400; }
+
+      /* Tabs: the figure's parameters have no other home — the menu owns the keyboard while it's open,
+         so there is no chat to type a command into. */
+      .tabs { display: flex; gap: 2px; margin: 2px 0 14px; border-bottom: 1px solid var(--hair); }
+      .tabs button { font-family: var(--cinzel); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+        color: var(--muted); background: none; border: 0; border-bottom: 2px solid transparent;
+        cursor: pointer; padding: 8px 12px; margin-bottom: -1px; }
+      .tabs button:hover { color: var(--body); }
+      .tabs button.on { color: var(--bright); border-bottom-color: var(--accent); }
+
+      .arc-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+      .arc-scroll::-webkit-scrollbar-track { background: transparent; }
+      .arc-scroll::-webkit-scrollbar-thumb { background: rgba(201, 162, 90, 0.2); border-radius: 4px; }
+      .arc-scroll::-webkit-scrollbar-thumb:hover { background: rgba(201, 162, 90, 0.35); }
+
+      #tune { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 4px 2px; }
+      .knob { display: grid; grid-template-columns: 108px 1fr 62px; gap: 12px; align-items: center; padding: 7px 6px; }
+      .knob + .knob { border-top: 1px solid rgba(201, 162, 90, 0.07); }
+      .knob label { font-size: 12px; color: var(--body); }
+      .knob .num { font-family: ui-monospace, Consolas, monospace; font-size: 11px; color: var(--accent); text-align: right; }
+      .knob .why { grid-column: 1 / -1; font-size: 11px; color: var(--muted); line-height: 1.45; margin: -2px 6px 0; }
+      .knob input[type="range"] { width: 100%; height: 3px; -webkit-appearance: none; appearance: none;
+        background: rgba(201, 162, 90, 0.2); border-radius: 2px; outline: none; }
+      .knob input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none;
+        width: 13px; height: 13px; border-radius: 50%; background: var(--accent); cursor: pointer; }
+      .tunefoot { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; padding: 10px 6px; }
+      .tunefoot button { font-family: var(--cinzel); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+        color: var(--muted); background: none; border: 0; cursor: pointer; padding: 4px 0; white-space: nowrap; }
+      .tunefoot button:hover { color: var(--heading); }
+      #dumpout { font-family: ui-monospace, Consolas, monospace; font-size: 10px; color: var(--accent);
+        line-height: 1.5; padding: 0 6px 14px; white-space: pre-wrap; word-break: break-all; }
+
+      #search { width: 100%; font-family: var(--spectral); font-size: 14px; color: var(--heading);
+        background: var(--well); border: 1px solid var(--hair); border-radius: 6px; padding: 10px 14px; outline: none; }
+      #search::placeholder { color: #6b6250; }
+      #search:focus { border-color: rgba(201, 162, 90, 0.45); }
+
+      #count { font-size: 11px; color: var(--muted); padding: 10px 2px 6px; letter-spacing: 0.04em; }
+      #count b { color: var(--accent); font-weight: 500; }
+
+      .head, .row { display: grid; grid-template-columns: 24px 1fr 92px; gap: 10px; align-items: center; }
+      /* Sized and centred even when empty, so the path column can't shift between favourited rows. */
+      .star { font-size: 15px; line-height: 1; text-align: center; cursor: pointer; user-select: none;
+        color: #4d4636; }
+      .star:hover { color: var(--bright); }
+      .star.on { color: var(--accent); }
+      .head { font-family: var(--cinzel); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+        color: #7d7259; padding: 0 8px 6px; border-bottom: 1px solid var(--hair); }
+
+      /* Virtualized: 10k+ rows, so only the visible window is in the DOM. */
+      #list { flex: 1; overflow-y: auto; overflow-x: hidden; position: relative; }
+      #spacer { position: relative; width: 100%; }
+
+      .row { position: absolute; left: 0; right: 0; height: var(--row); padding: 0 8px;
+        cursor: pointer; border-radius: 3px; }
+      .row:hover { background: rgba(201, 162, 90, 0.07); }
+      .row.sel { background: rgba(201, 162, 90, 0.13); box-shadow: inset 2px 0 0 var(--accent); }
+      .row.playing .path { color: var(--bright); }
+      .path { display: flex; min-width: 0; overflow: hidden; font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+        font-size: 11px; white-space: nowrap; }
+      /* The directory is what gets sacrificed when a path overflows, and it clips from the LEFT so the
+         meaningful tail (.../Stations/Sitting/) survives. Its text is bidi-isolated to stay LTR.
+         The lopsided shrink factors spend the directory almost entirely before the filename gives any. */
+      .dir { flex: 0 999 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: #6f6650; direction: rtl; }
+      .base { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--body); }
+      /* Abilities are the rows that genuinely animate, so they read brighter than the pose clips. */
+      .row.ability .base { color: var(--bright); }
+      .path mark { background: none; color: var(--bright); }
+      .alias { font-family: var(--cinzel); font-size: 11px; letter-spacing: 0.06em; color: var(--accent);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .alias.none { color: #4d4636; }
+      /* Named by the server owner rather than shipped in the mod's registry. */
+      .alias.mine { color: var(--bright); font-style: italic; }
+      .aliasedit { width: 100%; font-family: var(--cinzel); font-size: 11px; letter-spacing: 0.06em;
+        color: var(--heading); background: var(--well); border: 1px solid rgba(201, 162, 90, 0.45);
+        border-radius: 3px; padding: 1px 4px; outline: none; }
+
+      #status { font-size: 12px; color: var(--muted); padding: 16px 8px; }
+      .foot { display: flex; gap: 14px; align-items: center; padding-top: 12px; border-top: 1px solid var(--hair); margin-top: 8px; }
+      .foot button { font-family: var(--cinzel); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+        color: var(--muted); background: none; border: 0; cursor: pointer; padding: 6px 10px; }
+      .foot button:hover { color: var(--heading); }
+      .foot button.mode { color: var(--accent); }
+      .foot .spacer { flex: 1; }
+      #now { font-size: 11px; color: var(--accent); font-family: ui-monospace, Consolas, monospace;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 55%; }
+    </style>
+  </head>
+  <body>
+    <div id="panel">
+      <div class="eyebrow">Expressions</div>
+      <h1>Emotes</h1>
+      <p class="hint">
+        <kbd>&uarr;&darr;</kbd> browse &middot; <kbd>Enter</kbd> play &middot; <kbd>Esc</kbd> close.
+        The figure beside the menu shows whatever row you are on, before you play it on yourself.
+        Named rows are named by this server; every row replicates either way.
+        <b class="lit">Brighter</b> rows are abilities &mdash; the game's own way of animating you, and the
+        one kind the figure can't show.
+      </p>
+      <div class="tabs">
+        <button id="tab-assets" class="on">Assets</button>
+        <button id="tab-figure">Figure</button>
+      </div>
+      <input id="search" type="text" placeholder="Search path or alias&hellip;" autocomplete="off" spellcheck="false" />
+      <div id="count"></div>
+      <div class="head"><div></div><div>Asset path</div><div>Alias</div></div>
+      <div id="list" class="arc-scroll"><div id="spacer"></div></div>
+      <div id="status">Loading asset list&hellip;</div>
+      <div id="tune" class="arc-scroll" hidden></div>
+      <div class="foot">
+        <button id="stop">Stop</button>
+        <button id="mode" class="mode" title="What happens when the clip ends">Loop</button>
+        <button id="preview" class="mode" title="Show the highlighted row on a figure beside the menu">Preview</button>
+        <button id="place" title="Close the menu and stand a ghost of yourself where you aim">Place</button>
+        <span id="now"></span>
+        <span class="spacer"></span>
+        <button id="close">Close</button>
+      </div>
+    </div>
+
+    <script>
+      // Guarded so a missing host bridge can't abort page init and leave the list empty.
+      const send = (event, payload) => {
+        try { callEvent(event, JSON.stringify(payload || {})); }
+        catch (err) { console.warn("callEvent unavailable:", event, err); }
+      };
+      const ROW = 26, OVERSCAN = 6;
+
+      const search = document.getElementById("search");
+      const list = document.getElementById("list");
+      const spacer = document.getElementById("spacer");
+      const status = document.getElementById("status");
+      const count = document.getElementById("count");
+      const now = document.getElementById("now");
+
+      let all = [];      // { path, base, alias, kind, channel, hay }
+      let shown = [];
+      let sel = 0;
+      let term = "";
+      let playing = "";
+      // Server-owned, per identity: the page is told the set and asks for changes, never the reverse.
+      let favs = new Set();
+      // objectPath -> alias, from the server. Server-owned curation, so the page only proposes edits.
+      let aliases = {};
+      let canEdit = false;
+      let browseUnaliased = false;
+
+      // Stable, so everything keeps its existing order within the favourited and unfavourited halves.
+      // Server-declared only: the mod ships no alias list any more.
+      const aliasOf = (r) => aliases[objectPath(r)] || "";
+
+      function favsFirst(list) {
+        return list.slice().sort((a, b) => (favs.has(b.path) ? 1 : 0) - (favs.has(a.path) ? 1 : 0));
+      }
+      // What a clip does when it ends. Mutually exclusive, so one cycling control beats two checkboxes.
+      const MODES = [
+        { label: "Loop", loop: true,  hold: true,  hint: "Repeat until stopped" },
+        { label: "Hold", loop: false, hold: true,  hint: "Play once, freeze on the last frame" },
+        { label: "Once", loop: false, hold: false, hint: "Play once, then release so you can move" },
+      ];
+      let mode = 0;
+      let previewOn = true;
+      let previewTimer = 0;
+      let previewed = "";
+
+      // Debounced: selection tracks the cursor, so a scroll through the list would otherwise ask the
+      // game to load one clip per row it passes over.
+      function sendPreview() {
+        if (!previewOn) return;
+        clearTimeout(previewTimer);
+        previewTimer = setTimeout(() => {
+          const r = shown[sel];
+          const path = r ? objectPath(r) : "";
+          if (path === previewed) return;
+          previewed = path;
+          send("preview", { path, kind: r ? r.kind : "" });
+        }, 120);
+      }
+
+      // { poses|abilities: { "<dir>": ["<base>" | "<base>|<alias>", ...] } }, grouped to halve the payload.
+      function parse(obj) {
+        const rows = [];
+        const add = (group, kind) => {
+          for (const dir of Object.keys(group || {})) {
+            for (const entry of group[dir]) {
+              const bar = entry.indexOf("|");
+              const base = bar < 0 ? entry : entry.slice(0, bar);
+              const alias = bar < 0 ? "" : entry.slice(bar + 1);
+              const path = dir ? dir + "/" + base : base;
+              rows.push({
+                path, base, alias, kind,
+                // The Able channel isn't in the path, but the directory it lives under names it.
+                channel: /(^|\/)PartialBody(\/|$)/.test(dir) ? "PartialBody" : "FullBody",
+                hay: (path + " " + alias).toLowerCase(),
+              });
+            }
+          }
+        };
+        add(obj.poses, "pose");
+        add(obj.abilities, "ability");
+        return rows;
+      }
+
+      // An ability is a CLASS, so its object path takes the _C suffix an AnimSequence never has.
+      function objectPath(row) {
+        return "/Game/" + row.path + "." + row.base + (row.kind === "ability" ? "_C" : "");
+      }
+
+      function label(text, needle) {
+        if (!needle) return document.createTextNode(text);
+        const at = text.toLowerCase().indexOf(needle);
+        if (at < 0) return document.createTextNode(text);
+        const frag = document.createDocumentFragment();
+        const mark = document.createElement("mark");
+        mark.textContent = text.slice(at, at + needle.length);
+        frag.append(text.slice(0, at), mark, text.slice(at + needle.length));
+        return frag;
+      }
+
+      function play(row) {
+        playing = row.path;
+        now.textContent = aliasOf(row) || row.path;
+        send("play", {
+          path: objectPath(row), alias: row.alias, kind: row.kind, channel: row.channel,
+          loop: MODES[mode].loop, hold: MODES[mode].hold,
+        });
+        markSelection();
+      }
+
+      function filter() {
+        term = search.value.trim().toLowerCase();
+        // hay is precomputed, so a server alias has to be matched separately.
+        const available = (browseUnaliased || canEdit) ? all : all.filter((r) => !!aliasOf(r));
+        shown = favsFirst(term ? available.filter((r) => r.hay.includes(term) || aliasOf(r).toLowerCase().includes(term)) : available);
+        sel = 0;
+        spacer.style.height = shown.length * ROW + "px";
+        list.scrollTop = 0;
+        const abl = shown.reduce((n, r) => n + (r.kind === "ability" ? 1 : 0), 0);
+        count.innerHTML = `<b>${shown.length.toLocaleString()}</b> of ${all.length.toLocaleString()} assets`
+          + ` &middot; <b>${abl.toLocaleString()}</b> abilities`;
+        status.hidden = tab !== "assets" || shown.length > 0;
+        if (!shown.length) status.textContent = "Nothing matches that.";
+        paint();
+        sendPreview();
+      }
+
+      // Rebuilds only the rows inside the scroll window; row identity is the absolute index.
+      function paint() {
+        const first = Math.max(0, Math.floor(list.scrollTop / ROW) - OVERSCAN);
+        const last = Math.min(shown.length, first + Math.ceil(list.clientHeight / ROW) + OVERSCAN * 2);
+
+        for (const stale of [...spacer.children]) stale.remove();
+        for (let i = first; i < last; i++) {
+          const r = shown[i];
+          const el = document.createElement("div");
+          el.className = "row " + r.kind + (i === sel ? " sel" : "") + (r.path === playing ? " playing" : "");
+          el.style.top = i * ROW + "px";
+          el.dataset.i = i;
+
+          const p = document.createElement("div");
+          p.className = "path";
+          const dir = document.createElement("span");
+          dir.className = "dir";
+          dir.append("⁦", label(r.path.slice(0, r.path.length - r.base.length), term), "⁩");
+          const base = document.createElement("span");
+          base.className = "base";
+          base.append(label(r.base, term));
+          p.append(dir, base);
+
+          const named = aliasOf(r);
+          const a = document.createElement("div");
+          a.className = "alias" + (named ? " mine" : " none");
+          a.append(named ? label(named, term) : "—");
+          a.title = canEdit ? "Right-click to name this row" : "";
+          if (canEdit) a.addEventListener("contextmenu", (e) => { e.preventDefault(); editAlias(el, r, a); });
+
+          const star = document.createElement("div");
+          star.className = "star" + (favs.has(r.path) ? " on" : "");
+          star.textContent = favs.has(r.path) ? "★" : "☆";
+          star.title = "Favourite";
+          // Stop the row's click, or favouriting would also play the row.
+          star.addEventListener("click", (e) => { e.stopPropagation(); send("favToggle", { path: r.path }); });
+
+          el.append(star, p, a);
+          el.addEventListener("click", () => { sel = i; play(r); });
+          if (canEdit) el.addEventListener("contextmenu", (e) => { e.preventDefault(); editAlias(el, r, a); });
+          spacer.appendChild(el);
+        }
+      }
+
+      // An inline input rather than a modal: a CEF view has no window.prompt, and the row is already the
+      // thing being named. Enter commits, Escape or blur abandons.
+      function editAlias(row, r, cell) {
+        if (row.querySelector("input")) return;
+        const input = document.createElement("input");
+        input.className = "aliasedit";
+        input.value = aliasOf(r);
+        input.maxLength = 24;
+        input.placeholder = "name…";
+        cell.replaceWith(input);
+        input.focus();
+        input.select();
+        let done = false;
+        const finish = (commit) => {
+          if (done) return;
+          done = true;
+          if (commit) {
+            send("aliasSet", { path: objectPath(r), alias: input.value, kind: r.kind, channel: r.channel });
+          }
+          paint(); // the server's answer repaints again; this just restores the cell on cancel
+        };
+        input.addEventListener("keydown", (e) => {
+          e.stopPropagation(); // the window handler owns Enter/Escape for the list otherwise
+          if (e.key === "Enter") finish(true);
+          else if (e.key === "Escape") finish(false);
+        });
+        input.addEventListener("blur", () => finish(false));
+      }
+
+      // Selection changes far outpace window changes (every hover), so they only retag the live rows.
+      function markSelection() {
+        for (const el of spacer.children) {
+          const i = +el.dataset.i;
+          el.classList.toggle("sel", i === sel);
+          el.classList.toggle("playing", !!shown[i] && shown[i].path === playing);
+        }
+      }
+
+      function select(i) {
+        if (!shown.length) return;
+        sel = Math.min(shown.length - 1, Math.max(0, i));
+        const top = sel * ROW, bottom = top + ROW;
+        if (top < list.scrollTop) list.scrollTop = top;
+        else if (bottom > list.scrollTop + list.clientHeight) list.scrollTop = bottom - list.clientHeight;
+        paint();
+        sendPreview();
+      }
+
+      // Selection tracks the cursor, so Enter always plays the row you are looking at.
+      list.addEventListener("mousemove", (e) => {
+        const row = e.target.closest && e.target.closest(".row");
+        if (!row) return;
+        const i = +row.dataset.i;
+        if (i === sel) return;
+        sel = i;
+        markSelection();
+        sendPreview();
+      });
+
+      list.addEventListener("scroll", paint);
+      window.addEventListener("resize", paint);
+      search.addEventListener("input", filter);
+
+      // The focused view swallows keys from the game, so every shortcut is handled here. Escape aside,
+      // the Figure tab keeps its own keys — arrows have to reach the slider under the cursor.
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") return send("close");
+        if (tab !== "assets") return;
+        if (e.key === "Enter") { if (shown[sel]) play(shown[sel]); return; }
+        const page = Math.max(1, Math.floor(list.clientHeight / ROW) - 1);
+        if (e.key === "ArrowUp") select(sel - 1);
+        else if (e.key === "ArrowDown") select(sel + 1);
+        else if (e.key === "PageUp") select(sel - page);
+        else if (e.key === "PageDown") select(sel + page);
+        else if (e.key === "Home" && !search.value) select(0);
+        else if (e.key === "End" && !search.value) select(shown.length - 1);
+        else return;
+        e.preventDefault();
+      });
+
+      document.getElementById("stop").addEventListener("click", () => {
+        playing = ""; now.textContent = ""; send("stop"); markSelection();
+      });
+      const modeBtn = document.getElementById("mode");
+      modeBtn.addEventListener("click", () => {
+        mode = (mode + 1) % MODES.length;
+        modeBtn.textContent = MODES[mode].label;
+        modeBtn.title = MODES[mode].hint;
+        // Re-fire so the change shows immediately instead of only on the next pick.
+        const r = shown[sel];
+        if (r && r.path === playing) play(r);
+      });
+
+      // Sticky native-side, so the page's copy is only a starting point — it re-sends everything on open
+      // rather than trusting the two to have stayed in step.
+      const KNOBS = [
+        { key: "screenX", label: "Across", min: 0, max: 1, step: 0.01, def: 0.24, dp: 2,
+          why: "Where in frame the figure stands. The panel owns the right half." },
+        { key: "screenY", label: "Down", min: 0, max: 1, step: 0.01, def: 0.58, dp: 2,
+          why: "Higher values sink it toward the floor." },
+        { key: "distance", label: "Distance", min: 40, max: 800, step: 5, def: 185, dp: 0, unit: "cm",
+          why: "How far in front of the camera it stands — this is what sets how big it reads. Pull it in if a room is tight." },
+        { key: "scale", label: "Size", min: 0.1, max: 2.5, step: 0.05, def: 0.60, dp: 2, unit: "×",
+          why: "Scales the body itself, so it reads as a doll rather than a person standing further off." },
+        { key: "anchor", label: "Height", min: -100, max: 250, step: 5, def: -15, dp: 0, unit: "cm",
+          why: "Drop from the mark to its feet. Raise it if the figure floats." },
+        { key: "yaw", label: "Turn", min: -180, max: 180, step: 5, def: -20, dp: 0, unit: "°",
+          why: "Turn away from facing you square on." },
+        { key: "rig", label: "Lights", min: 0, max: 3, step: 0.05, def: 1, dp: 2, unit: "×",
+          why: "Its own private lights, which touch nothing else. At 0 the world lights it instead." },
+      ];
+      const tune = {};
+      const tuneEls = {};
+      let tuneQueued = null;
+
+      // Coalesced to one send per frame: a slider drag fires input events far faster than the game ticks.
+      function pushTune(patch) {
+        tuneQueued = Object.assign(tuneQueued || {}, patch);
+        requestAnimationFrame(() => {
+          if (!tuneQueued) return;
+          send("previewTune", { tune: tuneQueued });
+          tuneQueued = null;
+        });
+      }
+
+      function setKnob(k, value, push) {
+        tune[k.key] = value;
+        const el = tuneEls[k.key];
+        el.range.value = value;
+        el.num.textContent = value.toFixed(k.dp) + (k.unit || "");
+        if (push) pushTune({ [k.key]: value });
+      }
+
+      function buildTune() {
+        const tuneEl = document.getElementById("tune");
+        for (const k of KNOBS) {
+          const row = document.createElement("div");
+          row.className = "knob";
+          const label = document.createElement("label");
+          label.textContent = k.label;
+          const range = document.createElement("input");
+          range.type = "range";
+          range.min = k.min; range.max = k.max; range.step = k.step;
+          const num = document.createElement("div");
+          num.className = "num";
+          const why = document.createElement("div");
+          why.className = "why";
+          why.textContent = k.why;
+          range.addEventListener("input", () => setKnob(k, parseFloat(range.value), true));
+          row.append(label, range, num, why);
+          tuneEl.appendChild(row);
+          tuneEls[k.key] = { range, num };
+          setKnob(k, k.def, false);
+        }
+        const foot = document.createElement("div");
+        foot.className = "tunefoot";
+        const reset = document.createElement("button");
+        reset.textContent = "Reset to defaults";
+        reset.addEventListener("click", () => { for (const k of KNOBS) setKnob(k, k.def, true); });
+        // The figure only exists while this menu holds the keyboard, so a chat command can never reach it.
+        // Which FX reads as "transparent but still me" is an eyeball question, so it cycles in game.
+        // Disillusionment is in the list but last: it is refraction, so it drops the colour entirely.
+        const GHOSTS = ["InvisibilityCharacter", "Outline", "Focus", "Planardissolve", "Apparate",
+                        "Disillusionment", "(none)"];
+        let ghost = 0;
+        const ghostBtn = document.createElement("button");
+        const paintGhost = () => { ghostBtn.textContent = `Ghost: ${GHOSTS[ghost]}`; };
+        ghostBtn.title = "Skin FX for the Place ghost — cycle until one looks right";
+        ghostBtn.addEventListener("click", () => {
+          ghost = (ghost + 1) % GHOSTS.length;
+          paintGhost();
+          send("previewTune", { world: { ghost: GHOSTS[ghost] === "(none)" ? "" : GHOSTS[ghost] } });
+        });
+        paintGhost();
+
+        const dump = document.createElement("button");
+        dump.textContent = "Dump components";
+        dump.title = "Writes the figure's component table to the client log";
+        dump.addEventListener("click", () => {
+          document.getElementById("dumpout").textContent = "Reading the figure…";
+          send("previewDump", {});
+        });
+        foot.append(reset, ghostBtn, dump);
+        tuneEl.appendChild(foot);
+        const out = document.createElement("div");
+        out.id = "dumpout";
+        tuneEl.appendChild(out);
+      }
+
+      // Everything the native side keeps, in one message — cheaper than reconciling two copies.
+      function pushAllTune() {
+        const all = {};
+        for (const k of KNOBS) all[k.key] = tune[k.key];
+        pushTune(all);
+      }
+
+      const tabs = { assets: document.getElementById("tab-assets"), figure: document.getElementById("tab-figure") };
+      let tab = "assets";
+      function setTab(name) {
+        tab = name;
+        for (const [key, btn] of Object.entries(tabs)) btn.classList.toggle("on", key === name);
+        const assets = name === "assets";
+        for (const id of ["search", "count", "list"]) document.getElementById(id).hidden = !assets;
+        document.querySelector(".head").hidden = !assets;
+        status.hidden = !assets || shown.length > 0;
+        document.getElementById("tune").hidden = assets;
+        if (assets) search.focus();
+      }
+      tabs.assets.addEventListener("click", () => setTab("assets"));
+      tabs.figure.addEventListener("click", () => setTab("figure"));
+
+      const previewBtn = document.getElementById("preview");
+      previewBtn.addEventListener("click", () => {
+        previewOn = !previewOn;
+        previewBtn.classList.toggle("mode", previewOn);
+        previewed = "";
+        send("previewToggle", { on: previewOn });
+        sendPreview();
+      });
+
+      // Placement closes the menu on the native side, so the page just fires and forgets.
+      document.getElementById("place").addEventListener("click", () => {
+        const r = shown[sel];
+        if (!r) return;
+        send("place", { path: objectPath(r), alias: r.alias, kind: r.kind, channel: r.channel });
+      });
+
+      document.getElementById("close").addEventListener("click", () => send("close"));
+
+      // Re-open spawns a fresh figure standing idle, so the cached "already previewed" path is stale.
+      // Re-filtered rather than repainted: the set changes the ORDER, not just the glyphs.
+      window.addEventListener("em:aliases", (e) => {
+        const d = e.detail || {};
+        aliases = {};
+        for (const [name, spec] of Object.entries(d.aliases || {})) {
+          const path = typeof spec === "string" ? spec : (spec && spec.path);
+          if (path) aliases[path] = name;
+        }
+        if (typeof d.canEdit === "boolean") canEdit = d.canEdit;
+        if (typeof d.browseUnaliased === "boolean") browseUnaliased = d.browseUnaliased;
+        filter();
+      });
+
+      window.addEventListener("em:favs", (e) => {
+        favs = new Set((e.detail && e.detail.paths) || []);
+        filter();
+      });
+
+      window.addEventListener("em:dump", (e) => {
+        document.getElementById("dumpout").textContent = (e.detail && e.detail.text) || "(no answer)";
+      });
+
+      window.addEventListener("em:focus", () => {
+        if (tab === "assets") { search.focus(); search.select(); }
+        previewed = "";
+        pushAllTune();
+        sendPreview();
+      });
+
+      buildTune();
+      send("ready");
+
+      fetch("emote_assets.json")
+        .then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+        .then((obj) => {
+          all = parse(obj);
+          filter();
+        })
+        .catch((err) => {
+          status.hidden = false;
+          status.textContent = "Couldn't load emote_assets.json — " + err.message;
+        });
+    </script>
+  </body>
+</html>

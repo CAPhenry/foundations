@@ -1,0 +1,35 @@
+import serviceModule = require("./service");
+import type { HmpInteractPlayer } from "../types";
+
+const { createInteractService } = serviceModule;
+const Hmp = Imports.get("hmp-lib");
+const core = Imports.get("hmp-core");
+const inventory = Imports.get("hmp-inventory");
+const ui = Imports.get("hmp-ui");
+const logger = Hmp.logger.create("hmp-interact");
+const interact = createInteractService<HmpInteractPlayer>({
+    core,
+    inventory,
+    ui,
+    players: () => PlayerManager.getAll(),
+    events: Events,
+    worldObjects: typeof WorldObject === "undefined" ? undefined : WorldObject,
+    logger,
+});
+
+for (const name of ["register", "unregister", "get", "list", "trigger", "sync", "status"] as const) Exports.register(name, interact[name]);
+
+Events.onClient("hmp-interact:ready", (player) => interact.sync(player));
+Events.onClient("hmp-interact:trigger", (player, raw: unknown) => {
+    const payload = typeof raw === "string" ? (() => { try { return JSON.parse(raw) as Record<string, unknown>; } catch (_) { return {}; } })() : raw as Record<string, unknown>;
+    interact.trigger(player, String(payload?.id || "")).catch((error) => logger.error("interaction trigger failed", error));
+});
+Events.on("playerConnect", (player: HmpInteractPlayer) => interact.sync(player));
+Events.on("playerDisconnect", (player: HmpInteractPlayer) => interact.disconnect(player));
+Events.on("playerLocationChanged", (player: HmpInteractPlayer) => interact.sync(player));
+Events.on("resourceStop", (name?: string) => {
+    if (!name || name === "hmp-interact") interact.stop();
+    else interact.unregisterResource(name);
+});
+
+logger.info("interaction registry ready");

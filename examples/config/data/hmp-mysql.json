@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "host": "127.0.0.1",
+  "port": 3306,
+  "user": "hogwartsmp",
+  "password": "CHANGE_ME",
+  "database": "hogwartsmp",
+  "connectionLimit": 10,
+  "queueLimit": 0,
+  "connectTimeout": 10000,
+  "ssl": false,
+  "charset": "utf8mb4",
+  "timezone": "Z",
+  "dateStrings": true
+}

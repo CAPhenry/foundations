@@ -1,0 +1,30 @@
+{
+  "name": "hmp-houses",
+  "version": "0.1.0",
+  "private": true,
+  "author": "HogwartsMP",
+  "description": "Character-scoped Hogwarts houses, native synchronization, group projection, and an audited House Cup ledger.",
+  "license": "SEE LICENSE IN LICENSE",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "esbuild server/main.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/server.js --legal-comments=inline",
+    "test": "tsx test/houses.test.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "smoke": "node test/bundle.test.js"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "typescript": "5.9.3"
+  },
+  "mafiahub": {
+    "server": "dist/server.js",
+    "priority": -750,
+    "errorBehavior": "stop",
+    "exports": ["membership", "points", "status"],
+    "resourceDependencies": [
+      { "name": "hmp-mysql", "version": "0.1.0" },
+      { "name": "hmp-lib", "version": "0.1.0" },
+      { "name": "hmp-core", "version": "0.1.0" }
+    ]
+  }
+}

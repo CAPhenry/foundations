@@ -1,0 +1,45 @@
+const assert = require("node:assert");
+const fs = require("node:fs");
+const path = require("node:path");
+
+const exportsSeen = new Map();
+const handlers = new Map();
+const logger = { info() {}, error() {}, warn() {}, debug() {} };
+const database = {
+    query: async () => [],
+    single: async () => null,
+    scalar: async () => null,
+    insert: async () => 1,
+    update: async () => 0,
+    transaction: async (work) => work(database),
+    migrate: async () => ({ resource: "hmp-core", applied: [], skipped: [], currentVersion: 1 }),
+    ready: async () => true,
+};
+
+global.Exports = { register: (name, value) => exportsSeen.set(name, value) };
+global.Imports = {
+    get(name) {
+        if (name === "hmp-mysql") return database;
+        if (name === "hmp-lib") return {
+            logger: { create: () => logger },
+            config: { load: (_path, options) => ({ ...options.defaults }), env: { number: Number, boolean: (value) => value === "true" } },
+            player: { format: (player) => `#${player.id}` },
+        };
+        throw new Error(`Unexpected import ${name}`);
+    },
+};
+global.Events = { on: (name, handler) => handlers.set(name, handler), emit: async () => {} };
+global.PlayerManager = { getAll: () => [] };
+
+require(path.resolve(__dirname, "..", "dist", "main.js"));
+
+const expected = ["status", "identity", "accounts", "sessions", "characters", "groups", "metadata"];
+assert.deepStrictEqual([...exportsSeen.keys()], expected);
+assert.strictEqual(typeof exportsSeen.get("status"), "function");
+for (const name of expected.slice(1)) assert.strictEqual(typeof exportsSeen.get(name), "object");
+assert.ok(handlers.has("playerConnect"));
+assert.ok(handlers.has("playerDisconnect"));
+assert.ok(handlers.has("resourceStop"));
+const clientSource = fs.readFileSync(path.resolve(__dirname, "..", "dist", "client.js"), "utf8");
+assert.ok(clientSource.includes("client dependency shim ready"));
+console.log("hmp-core bundle contract passed");

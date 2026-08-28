@@ -12,6 +12,29 @@ export interface HmpMySQLMetrics {
     failedQueries: number;
     transactions: number;
     failedTransactions: number;
+    migrations: number;
+    failedMigrations: number;
+}
+
+export interface HmpMySQLMigrationStatement {
+    query: string;
+    values?: HmpMySQLValues;
+    prepare?: boolean;
+}
+
+export interface HmpMySQLMigration {
+    version: number;
+    name: string;
+    statements?: Array<string | HmpMySQLMigrationStatement>;
+    /** Alias for statements. */
+    up?: string | Array<string | HmpMySQLMigrationStatement>;
+}
+
+export interface HmpMySQLMigrationResult {
+    resource: string;
+    applied: number[];
+    skipped: number[];
+    currentVersion: number;
 }
 
 export interface HmpMySQLStatus {
@@ -36,6 +59,7 @@ export interface HmpMySQLTransaction {
 export interface HmpMySQL extends HmpMySQLTransaction {
     transaction<T>(work: (tx: HmpMySQLTransaction) => T | Promise<T>): Promise<T>;
     transaction(steps: HmpMySQLTransactionStep[]): Promise<unknown[]>;
+    migrate(resource: string, migrations: HmpMySQLMigration[], options?: { lockTimeoutSeconds?: number }): Promise<HmpMySQLMigrationResult>;
     /** Resolves false while disabled or unreachable; it does not throw for availability failures. */
     ready(): Promise<boolean>;
     status(): HmpMySQLStatus;

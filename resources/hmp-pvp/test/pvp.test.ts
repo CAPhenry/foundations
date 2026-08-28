@@ -1,0 +1,27 @@
+import assert = require("node:assert");
+import serviceModule = require("../server/service");
+const { createPvpService } = serviceModule;
+
+let installed: ((hit: any) => any) | null = null;
+const warnings: string[] = [];
+const modes: Array<{ enabled: boolean; playerId?: number }> = [];
+const service = createPvpService({ defaultDecision: "deny", initialLethalMode: false, install: (fn) => { installed = fn; }, clearPolicy: () => { installed = null; }, vitals: () => null, applyMode: (enabled, playerId) => modes.push({ enabled, playerId }), warn: (message) => warnings.push(message) });
+const zone = service.policy.register({ id: "zone", resource: "hmp-zones", priority: 100, decide: (hit) => hit.casterId === 9 ? true : undefined });
+const duel = service.policy.register({ id: "duel", resource: "hmp-duels", priority: 1000, decide: (hit) => hit.casterId === 1 && hit.victimId === 2 ? { minHp: 1 } : undefined });
+assert.deepStrictEqual(installed!({ casterId: 1, victimId: 2, spellId: 1, spell: "x", damage: 10, duration: 0 }), { minHp: 1 });
+assert.strictEqual(installed!({ casterId: 9, victimId: 8, spellId: 1, spell: "x", damage: 10, duration: 0 }), true);
+assert.strictEqual(installed!({ casterId: 3, victimId: 4, spellId: 1, spell: "x", damage: 10, duration: 0 }), false);
+assert.strictEqual(service.mode.setLethal(true, { resource: "test", reason: "test" }), true);
+assert.strictEqual(service.mode.isLethal(), true);
+assert.strictEqual(installed!({ casterId: 3, victimId: 4, spellId: 1, spell: "x", damage: 10, duration: 0 }), true);
+assert.deepStrictEqual(installed!({ casterId: 1, victimId: 2, spellId: 1, spell: "x", damage: 999, duration: 0 }), { minHp: 1 });
+assert.strictEqual(service.mode.sync({ id: 7, emit: () => undefined }), true);
+assert.deepStrictEqual(modes, [{ enabled: false, playerId: undefined }, { enabled: true, playerId: undefined }, { enabled: true, playerId: 7 }]);
+service.policy.register({ id: "broken", resource: "test", priority: 2000, decide: () => { throw new Error("boom"); } });
+assert.strictEqual(installed!({ casterId: 1, victimId: 2, spellId: 1, spell: "x", damage: 10, duration: 0 }), false);
+assert.strictEqual(warnings.length, 1);
+assert.strictEqual(service.policy.clear("test"), 1);
+assert.strictEqual(duel(), true); assert.strictEqual(zone(), true);
+assert.strictEqual(service.status().evaluated, 6);
+service.stop(); assert.strictEqual(installed, null);
+console.log("hmp-pvp tests passed");

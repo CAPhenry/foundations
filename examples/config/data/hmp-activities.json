@@ -1,0 +1,14 @@
+{
+  "command": "activities",
+  "enableCommands": true,
+  "enableTestActivity": true,
+  "maxDefinitions": 128,
+  "maxSessions": 256,
+  "maxMetadataBytes": 16384,
+  "maxInvitations": 512,
+  "defaultInvitationTtlSeconds": 30,
+  "maximumInvitationTtlSeconds": 600,
+  "defaultLobbyTtlSeconds": 1800,
+  "maximumLobbyTtlSeconds": 21600,
+  "sweepIntervalSeconds": 30
+}

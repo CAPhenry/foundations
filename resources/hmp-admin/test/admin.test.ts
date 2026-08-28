@@ -1,0 +1,180 @@
+import assert = require("node:assert");
+import { test } from "node:test";
+import permissionsModule = require("../server/permissions");
+import serviceModule = require("../server/service");
+import type { HmpAdminAuditEntry, HmpAdminBan, HmpAdminWarning } from "../types";
+import type { AdminConfig, AdminRepository, Player } from "../server/internal";
+
+const { createPermissions } = permissionsModule;
+const { createAdminService } = serviceModule;
+
+function setup() {
+    let nextAudit = 1;
+    let nextWarning = 1;
+    let nextBan = 1;
+    let nextTeleport = 1;
+    const audit: HmpAdminAuditEntry[] = [];
+    const warnings: HmpAdminWarning[] = [];
+    const bans: HmpAdminBan[] = [];
+    const inventoryMutations: unknown[][] = [];
+    const groupMutations: unknown[][] = [];
+    const jobMutations: unknown[][] = [];
+    const bankMutations: unknown[][] = [];
+    const kicked = new Map<number, string>();
+    const holds = new Map<number, Set<string>>();
+
+    function player(id: number, nickname: string): Player {
+        return {
+            id, nickname, connected: true, ping: id * 5, position: { x: id * 100, y: id * 200, z: 300 }, virtualWorld: 0,
+            emit() {},
+            location() { return { areaId: "Hogwarts", regionId: "LibraryAnnex", destinationId: null, x: this.position.x, y: this.position.y, z: this.position.z, yaw: 0, revision: 1 }; },
+            kick(reason = "") { kicked.set(id, reason); },
+            teleport() { return nextTeleport++; },
+            hold(input) { if (!holds.has(id)) holds.set(id, new Set()); holds.get(id)!.add(input.owner); return true; },
+            release(owner) { return holds.get(id)?.delete(owner) || false; },
+            holds() { return [...holds.get(id) || []].map((owner) => ({ owner })); },
+        } as Player;
+    }
+
+    const verifiedAdmin = player(1, "Minerva");
+    const assertedAdmin = player(2, "Temporary Staff");
+    const verifiedTarget = player(3, "Harry");
+    const assertedTarget = player(4, "Guest");
+    const players = [verifiedAdmin, assertedAdmin, verifiedTarget, assertedTarget];
+    const sessions = new Map(players.map((entry) => [entry.id, {
+        player: entry, playerId: entry.id,
+        account: { id: entry.id * 10, displayName: entry.nickname, createdAt: new Date(0), lastSeenAt: new Date(0) },
+        principal: { provider: "test", subject: `subject-${entry.id}`, trust: entry === assertedAdmin || entry === assertedTarget ? "asserted" : "verified" },
+        character: { id: entry.id * 100, accountId: entry.id * 10, slot: 1, name: entry.nickname, status: "active", createdAt: new Date(0), updatedAt: new Date(0), deletedAt: null },
+        connectedAt: new Date(0).toISOString(),
+    }]));
+    const groupGrades = new Map<number, number>([[verifiedAdmin.id, 3], [assertedAdmin.id, 3]]);
+
+    const core = {
+        sessions: { get(value: Player | number) { return sessions.get(typeof value === "number" ? value : value.id) || null; }, all: () => [...sessions.values()] },
+        groups: {
+            async effective(value: Player | number) { const id = typeof value === "number" ? value : value.id; const grade = groupGrades.get(id); return grade === undefined ? [] : [{ scope: "account", key: "admin", grade, metadata: {} }]; },
+            async setAccount(...args: unknown[]) { groupMutations.push(["setAccount", ...args]); return { scope: "account", key: String(args[1]), grade: Number(args[2]), metadata: {} }; },
+            async removeAccount(...args: unknown[]) { groupMutations.push(["removeAccount", ...args]); return true; },
+            async setCharacter(...args: unknown[]) { groupMutations.push(["setCharacter", ...args]); return { scope: "character", key: String(args[1]), grade: Number(args[2]), metadata: {} }; },
+            async removeCharacter(...args: unknown[]) { groupMutations.push(["removeCharacter", ...args]); return true; },
+        },
+    };
+
+    const repository: AdminRepository = {
+        async start() {},
+        async beginAudit(input) {
+            const id = nextAudit++;
+            audit.push({ id, actorAccountId: input.actor?.account.id ?? null, actorCharacterId: input.actor?.character?.id ?? null, actorPlayerId: input.actor?.playerId ?? null, action: input.action, targetAccountId: input.target?.account.id ?? null, targetCharacterId: input.target?.character?.id ?? null, targetPlayerId: input.target?.playerId ?? null, reason: input.reason, metadata: input.metadata || {}, status: "pending", error: "", createdAt: new Date(), completedAt: null });
+            return id;
+        },
+        async finishAudit(id, status, error = "", metadata) { const entry = audit.find((value) => value.id === id)!; entry.status = status; entry.error = error; entry.completedAt = new Date(); if (metadata) entry.metadata = metadata; },
+        async audit(limit, targetAccountId) { return audit.filter((entry) => !targetAccountId || entry.targetAccountId === targetAccountId).slice(-limit).reverse(); },
+        async addWarning(accountId, actorAccountId, reason) { const warning = { id: nextWarning++, accountId, actorAccountId, reason, createdAt: new Date() }; warnings.push(warning); return warning; },
+        async warnings(accountId, limit) { return warnings.filter((entry) => entry.accountId === accountId).slice(-limit).reverse(); },
+        async addBan(input) { const ban = { id: nextBan++, accountId: input.accountId, provider: input.provider, subject: input.subject, trust: input.trust, actorAccountId: input.actorAccountId, reason: input.reason, expiresAt: input.expiresAt, createdAt: new Date(), revokedAt: null }; bans.push(ban); return ban; },
+        async activeBan(session) { return bans.find((entry) => !entry.revokedAt && entry.accountId === session.account.id) || null; },
+        async revokeBan(id) { const ban = bans.find((entry) => entry.id === id && !entry.revokedAt); if (!ban) return false; ban.revokedAt = new Date(); return true; },
+        async bans(limit) { return bans.slice(-limit).reverse(); },
+    };
+
+    const config: AdminConfig = {
+        command: "admin", requireVerifiedIdentity: true, allowUnsafeAssertedBans: false, teleportTimeoutMs: 5000, auditPageSize: 50,
+        bootstrapSecret: "closed-test-secret", roleRules: [
+            { group: "admin", minimumGrade: 1, capabilities: ["admin.view", "admin.kick", "admin.teleport", "admin.freeze", "admin.warn"] },
+            { group: "admin", minimumGrade: 2, capabilities: ["admin.groups", "admin.jobs", "admin.inventory", "admin.banking", "admin.audit"] },
+            { group: "admin", minimumGrade: 3, capabilities: ["admin.ban", "admin.reconcile"] },
+        ],
+    };
+    const permissions = createPermissions({ core: core as never, config });
+    const banking = {
+        accounts: { async personal(characterId: number, currency: string) { return { id: characterId, currency }; } },
+        transactions: {
+            async credit(...args: unknown[]) { bankMutations.push(["credit", ...args]); return {}; },
+            async debit(...args: unknown[]) { bankMutations.push(["debit", ...args]); return {}; },
+            async reconcile(...args: unknown[]) { bankMutations.push(["reconcile", ...args]); return {}; },
+        },
+    };
+    const service = createAdminService({
+        repository, permissions, core: core as never,
+        inventory: { inventory: { async add(...args: unknown[]) { inventoryMutations.push(["add", ...args]); return 5; }, async remove(...args: unknown[]) { inventoryMutations.push(["remove", ...args]); return 4; } } } as never,
+        banking: banking as never,
+        jobs: { employment: { async hire(...args: unknown[]) { jobMutations.push(["hire", ...args]); return {}; }, async fire(...args: unknown[]) { jobMutations.push(["fire", ...args]); return {}; }, async setGrade(...args: unknown[]) { jobMutations.push(["grade", ...args]); return {}; } } } as never,
+        config, logger: { debug: () => true, info: () => true, warn: () => true, error: () => true }, migrations: [],
+        listPlayers: () => players, getPlayer: (id) => players.find((entry) => entry.id === id) || null,
+    });
+    return { service, permissions, config, verifiedAdmin, assertedAdmin, verifiedTarget, assertedTarget, audit, warnings, bans, kicked, holds, inventoryMutations, groupMutations, jobMutations, bankMutations };
+}
+
+test("requires verified staff identity but supports session-only closed-test bootstrap", async () => {
+    const state = setup();
+    await state.service.ready();
+    assert.strictEqual(await state.permissions.has(state.assertedAdmin, "admin.view"), false);
+    assert.strictEqual(await state.permissions.authenticate(state.assertedAdmin, "wrong"), false);
+    assert.strictEqual(await state.permissions.authenticate(state.assertedAdmin, "closed-test-secret"), true);
+    assert.strictEqual(await state.permissions.has(state.assertedAdmin, "admin.ban"), true);
+    assert.strictEqual(state.permissions.revoke(state.assertedAdmin), true);
+    assert.strictEqual(await state.permissions.has(state.assertedAdmin, "admin.view"), false);
+    assert.deepStrictEqual(await state.permissions.capabilities(state.verifiedAdmin), ["admin.audit", "admin.ban", "admin.banking", "admin.freeze", "admin.groups", "admin.inventory", "admin.jobs", "admin.kick", "admin.reconcile", "admin.teleport", "admin.view", "admin.warn"]);
+});
+
+test("inspects, freezes, warns, kicks, and audits player actions", async () => {
+    const state = setup();
+    const listed = await state.service.players.list(state.verifiedAdmin);
+    assert.strictEqual(listed.length, 4);
+    assert.strictEqual(listed[0].location?.areaId, "Hogwarts");
+    assert.strictEqual(await state.service.actions.freeze(state.verifiedAdmin, state.verifiedTarget, "investigation"), true);
+    assert.strictEqual((await state.service.players.get(state.verifiedAdmin, state.verifiedTarget)).frozen, true);
+    assert.strictEqual(await state.service.actions.release(state.verifiedAdmin, state.verifiedTarget, "clear"), true);
+    await state.service.moderation.warn(state.verifiedAdmin, state.verifiedTarget, "Please stop");
+    await state.service.actions.kick(state.verifiedAdmin, state.verifiedTarget, "Testing kick");
+    assert.strictEqual(state.warnings.length, 1);
+    assert.strictEqual(state.kicked.get(state.verifiedTarget.id), "Testing kick");
+    assert.ok(state.audit.every((entry) => entry.status === "completed"));
+    assert.deepStrictEqual(state.audit.map((entry) => entry.action), ["player.freeze", "player.release", "moderation.warn", "player.kick"]);
+});
+
+test("waits for matching player-local streamed teleport completion", async () => {
+    const state = setup();
+    const first = state.service.actions.goto(state.verifiedAdmin, state.verifiedTarget);
+    const second = state.service.actions.bring(state.verifiedAdmin, state.assertedTarget);
+    while (state.service.status().pendingTeleports < 2) await new Promise<void>((resolve) => setImmediate(resolve));
+    assert.strictEqual(state.service.onTeleportComplete(state.verifiedAdmin, 1, 0, { requestId: 1, status: 0, requested: { x: 0, y: 0, z: 0, yaw: null, snapToGround: true, groundSnapDistance: 2000 }, destination: { x: 1, y: 2, z: 3, yaw: 0 }, groundSnapped: true }), true);
+    assert.strictEqual(state.service.onTeleportComplete(state.assertedTarget, 2, 0, { requestId: 2, status: 0, requested: { x: 0, y: 0, z: 0, yaw: null, snapToGround: true, groundSnapDistance: 2000 }, destination: { x: 1, y: 2, z: 3, yaw: 0 }, groundSnapped: true }), true);
+    assert.strictEqual(await first, 1);
+    assert.strictEqual(await second, 2);
+});
+
+test("rejects administrative teleports across coordinate spaces", async () => {
+    const state = setup();
+    state.verifiedTarget.location = () => ({ areaId: "Overland", regionId: "Hogsmeade", destinationId: null, x: 0, y: 0, z: 0, yaw: 0, revision: 2 });
+    await assert.rejects(state.service.actions.goto(state.verifiedAdmin, state.verifiedTarget), /same game area/);
+    assert.strictEqual(state.service.status().pendingTeleports, 0);
+});
+
+test("routes corrective mutations through foundation services with completed audit", async () => {
+    const state = setup();
+    await state.service.actions.inventory(state.verifiedAdmin, state.verifiedTarget, "give", "test:wand", 2, "test item");
+    await state.service.actions.group(state.verifiedAdmin, state.verifiedTarget, "set", "character", "prefect", 1, "promotion");
+    await state.service.actions.job(state.verifiedAdmin, state.verifiedTarget, "hire", "auror", 2, "test employment");
+    await state.service.actions.banking(state.verifiedAdmin, state.verifiedTarget, "credit", 50, "galleons", "test funds");
+    await state.service.actions.reconcile(state.verifiedAdmin, "tx:test", "fail", "closed-test recovery");
+    assert.strictEqual(state.inventoryMutations.length, 1);
+    assert.strictEqual(state.groupMutations.length, 1);
+    assert.strictEqual(state.jobMutations.length, 1);
+    assert.strictEqual(state.bankMutations.length, 2);
+    assert.ok(state.audit.every((entry) => entry.status === "completed"));
+});
+
+test("refuses durable bans for asserted identities and enforces verified bans on session ready", async () => {
+    const state = setup();
+    await assert.rejects(state.service.moderation.ban(state.verifiedAdmin, state.assertedTarget, "untrusted identity"), /verified target identity/);
+    const ban = await state.service.moderation.ban(state.verifiedAdmin, state.verifiedTarget, "verified identity", 24);
+    assert.strictEqual(ban.trust, "verified");
+    assert.match(state.kicked.get(state.verifiedTarget.id) || "", /Banned/);
+    state.kicked.delete(state.verifiedTarget.id);
+    const session = { player: state.verifiedTarget, playerId: state.verifiedTarget.id, account: { id: 30 }, principal: { provider: "test", subject: "subject-3", trust: "verified" }, character: null } as never;
+    assert.strictEqual(await state.service.onSessionReady(session), true);
+    assert.match(state.kicked.get(state.verifiedTarget.id) || "", /Banned/);
+    assert.strictEqual(await state.service.moderation.unban(state.verifiedAdmin, ban.id, "reviewed"), true);
+});

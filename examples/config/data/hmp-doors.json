@@ -1,0 +1,17 @@
+{
+  "command": "doors",
+  "enableCommands": true,
+  "adminGroups": [
+    {
+      "key": "admin",
+      "minimumGrade": 1
+    }
+  ],
+  "rules": [
+    {
+      "priority": 1000,
+      "action": "allow",
+      "doors": "*"
+    }
+  ]
+}

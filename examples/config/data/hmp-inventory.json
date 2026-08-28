@@ -1,0 +1,30 @@
+{
+  "slots": 36,
+  "maxWeight": 60,
+  "autoSaveMs": 30000,
+  "allowInventoryCommand": true,
+  "ui": {
+    "url": "http://resources/hmp-inventory/dist/index.html"
+  },
+  "items": [
+    {
+      "name": "sealed_letter",
+      "label": "Sealed Letter",
+      "description": "Owl post with an unbroken seal.",
+      "icon": "http://resources/hmp-inventory/icons/item.svg",
+      "category": "Correspondence",
+      "weight": 0.05,
+      "maxStack": 20
+    },
+    {
+      "name": "evidence_bag",
+      "label": "Evidence Bag",
+      "description": "A tagged bag for recovered evidence.",
+      "icon": "http://resources/hmp-inventory/icons/item.svg",
+      "category": "Evidence",
+      "weight": 0.1,
+      "maxStack": 1,
+      "unique": true
+    }
+  ]
+}

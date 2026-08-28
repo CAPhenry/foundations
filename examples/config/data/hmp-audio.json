@@ -1,0 +1,18 @@
+{
+  "defaultRange": 10000,
+  "maxActivePerOwner": 128,
+  "oneShotHandleMs": 60000,
+  "enableCommands": true,
+  "command": "audio",
+  "aliases": {
+    "thunder": "Amb3D_Storm_ThunderClaps_Play",
+    "explosion": "cabbage_explosion",
+    "accio": "accio_cast",
+    "click": "UI_Menu_Select",
+    "open": "UI_Menu_Open",
+    "close": "UI_Menu_Close",
+    "owl": "UI_OwlMail_Envelope_Open",
+    "brewdone": "Nurturing_Brewing_CompleteBrewing_Play",
+    "stinger": "COM_38_Chest_Appearing_Stinger"
+  }
+}

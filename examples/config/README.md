@@ -1,0 +1,44 @@
+# Example Foundation configuration
+
+Copy the contents of `data` to `<server-root>/data`, where `<server-root>` is the working directory
+used to launch `HogwartsMPServer.exe`. Edit the copies; these are safe starting values, not production
+secrets. See the top-level `INSTALL.md` and `DATABASE.md` for the complete setup procedure.
+
+Configuration files are provided for resources with file-backed settings. `hmp-lib`, `hmp-ui`,
+`hmp-banking`, `hmp-interact`, `hmp-shops`, and `hmp-jobs` use built-in defaults and registration APIs;
+server-specific banks, jobs, interactions, and shops belong in a separate gameplay resource.
+`hmp-doors` includes a file-backed example because physical-door access is a server-wide world policy.
+`hmp-emotes` includes one for curated aliases, editor groups, catalog visibility, and renderer selection.
+`hmp-audio` includes one for Wwise aliases, positional range, handle limits, and closed-test commands.
+`hmp-blips` includes one for marker lifetimes, player visibility, native tint/scale, and private probes.
+`hmp-spells` includes a closed-testing starter kit, group rules, admin commands, and cast-report limits.
+`hmp-progression` includes XP/talent bounds, reconciliation timeouts, and closed-test admin permissions.
+`hmp-houses` includes group projection, point-balance policy, and closed-testing command permissions.
+`hmp-activities` includes bounded lobby settings and an opt-in dungeon-party-shaped test definition.
+`hmp-pvp` includes the server-wide default decision, lethal-mode default, staff groups, and join-sync delay;
+keep the fallback `deny` and lethal mode off unless the server intentionally runs open-world mortal PvP.
+`hmp-duels` includes challenge expiry, countdown, command, and non-lethal health-floor settings.
+
+The MySQL JSON intentionally contains `CHANGE_ME`. Prefer injecting `HMP_MYSQL_URL` or the individual
+database environment variables instead of keeping a production password in the file. Likewise,
+`HMP_ADMIN_BOOTSTRAP_SECRET` exists only in the process environment and must contain at least 16 bytes.
+Foundation does not automatically read `environment.example` or a `.env` file.
+
+Review at minimum:
+
+- the database host, user, password, database, TLS policy, and connection limits;
+- every spawn coordinate against the supported game build;
+- whether deleting characters is appropriate for the test;
+- custom item names, weights, stack sizes, and resource-hosted icon URLs;
+- the inventory UI URL if the server replaces the bundled Arcanum renderer;
+- the physical-door default, group exceptions, and whether closed-test door commands remain enabled;
+- which emotes players may browse, which groups may curate aliases, and the emote UI URL;
+- audio aliases, positional delivery range, handle limits, and whether `/audio` testing is enabled;
+- marker TTL/limits, whether every remote player is shown, and the player-blip tint/scale settings;
+- starter spell policy, group-gated kits, bonus loadouts, and whether `/spells` testing is enabled;
+- maximum XP/talent-point bounds and who may use progression administration commands;
+- the house group prefix, whether standings may go negative, and who may assign houses or points;
+- activity lobby limits and expiry, and whether the non-gameplay closed-test definition remains enabled;
+- the global PvP fallback decision, lethal-mode default/staff groups, duel countdown/expiry, and the
+  non-lethal health floor;
+- the admin role-to-capability rules and verified-identity policy.

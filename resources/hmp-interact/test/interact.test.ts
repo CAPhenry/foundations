@@ -1,0 +1,254 @@
+import assert = require("node:assert");
+import { test } from "node:test";
+import normalizeModule = require("../shared/normalize");
+import serviceModule = require("../server/service");
+import clientModule = require("../client/interact");
+import type { HmpInteractPlayer, HmpInteractionDefinition } from "../types";
+
+const { normalizeInteraction } = normalizeModule;
+const { createInteractService } = serviceModule;
+const { createInteractClient } = clientModule;
+
+interface TestPlayer extends HmpInteractPlayer {
+    messages: Array<{ event: string; payload: unknown }>;
+}
+
+function setup() {
+    let clock = 1000;
+    const player = (id: number, x = 0): TestPlayer => ({
+        id,
+        nickname: `Player ${id}`,
+        position: { x, y: 0, z: 0 },
+        location() { return { areaId: "Hogwarts", regionId: "LibraryAnnex", destinationId: null, x: this.position.x, y: this.position.y, z: this.position.z, yaw: 0, revision: 1 }; },
+        messages: [],
+        emit(event, payload) { this.messages.push({ event, payload }); },
+    });
+    const first = player(7);
+    const second = player(8);
+    const groups = new Set(["student"]);
+    const items = new Map([["wand", 1]]);
+    const notifications: unknown[] = [];
+    const menus: unknown[] = [];
+    const progresses: unknown[] = [];
+    let menuChoice: string | null = null;
+    let progressResult = true;
+    const emitted: Array<{ event: string; args: unknown[] }> = [];
+    const created: Array<{ key: string; model: string | number; options: unknown }> = [];
+    const destroyed: string[] = [];
+    let failedCreates = 0;
+    const service = createInteractService<TestPlayer>({
+        core: {
+            characters: { active: () => ({ id: 12, name: "Poppy" }) },
+            groups: { has: async (_candidate: TestPlayer | number, key: string) => groups.has(key) },
+        } as never,
+        inventory: {
+            inventory: { has: async (_candidate: TestPlayer | number, name: string, amount = 1) => (items.get(name) || 0) >= amount },
+        } as never,
+        ui: {
+            notify(_candidate: TestPlayer, value: unknown) { notifications.push(value); return true; },
+            async context(_candidate: TestPlayer, value: unknown) { menus.push(value); return menuChoice; },
+            async progress(_candidate: TestPlayer, value: unknown) { progresses.push(value); return progressResult; },
+        } as never,
+        players: () => [first, second],
+        events: { emit(event, ...args) { emitted.push({ event, args }); } },
+        worldObjects: {
+            create(key, model, options) { if (failedCreates-- > 0) throw new Error("world object unavailable"); created.push({ key, model, options }); return {}; },
+            destroy(key) { destroyed.push(key); return true; },
+        },
+        logger: { info() {}, warn() {}, error() {} },
+        now: () => clock,
+    });
+    return {
+        service, first, second, groups, items, notifications, menus, progresses, emitted, created, destroyed,
+        choose(value: string | null) { menuChoice = value; },
+        completeProgress(value: boolean) { progressResult = value; },
+        advance(milliseconds: number) { clock += milliseconds; },
+        failNextWorldCreate() { failedCreates = 1; },
+    };
+}
+
+test("normalizes bounded interaction definitions and rejects ambiguous options", () => {
+    const normalized = normalizeInteraction({
+        id: "shop.counter",
+        resource: "hmp-shops",
+        label: "  Browse\nWands  ",
+        position: { x: 1, y: 2, z: 3 },
+        radius: 200,
+        promptDistance: 900,
+        areaId: "Hogwarts",
+        regionId: "LibraryAnnex",
+        options: [{ id: "browse", label: "Browse", handler() {} }],
+    });
+    assert.strictEqual(normalized.label, "Browse Wands");
+    assert.strictEqual(normalized.promptDistance, 200);
+    assert.strictEqual(normalized.areaId, "Hogwarts");
+    assert.throws(() => normalizeInteraction({
+        id: "duplicate",
+        resource: "test",
+        label: "Duplicate",
+        position: { x: 0, y: 0, z: 0 },
+        options: [
+            { id: "same", label: "One", handler() {} },
+            { id: "same", label: "Two", handler() {} },
+        ],
+    }), /duplicated/);
+});
+
+test("registers owned zones, publishes optional props and cleans up safely", () => {
+    const state = setup();
+    const dispose = state.service.register({
+        id: "wardrobe",
+        resource: "hmp-characters",
+        label: "Change appearance",
+        position: { x: 10, y: 20, z: 30 },
+        object: { model: "/Game/Wardrobe.Wardrobe", yaw: 90 },
+        handler() {},
+    });
+    assert.strictEqual(state.service.status().interactions, 1);
+    assert.strictEqual(state.created[0].key, "hmp-interact:wardrobe");
+    assert.ok(state.first.messages.some((message) => message.event === "hmp-interact:snapshot"));
+    assert.throws(() => state.service.register({
+        id: "wardrobe", resource: "other", label: "Hijack", position: { x: 0, y: 0, z: 0 }, handler() {},
+    }), /already owned/);
+    state.failNextWorldCreate();
+    assert.throws(() => state.service.register({
+        id: "wardrobe", resource: "hmp-characters", label: "Replacement", position: { x: 0, y: 0, z: 0 },
+        object: { model: "/Game/Other.Other" }, handler() {},
+    }), /world object unavailable/);
+    assert.strictEqual(state.service.get("wardrobe")?.label, "Change appearance");
+    assert.strictEqual(dispose(), true);
+    assert.strictEqual(dispose(), false);
+    assert.deepStrictEqual(state.destroyed, ["hmp-interact:wardrobe", "hmp-interact:wardrobe"]);
+});
+
+test("rejects forged distance and requirements, then applies cooldown after execution", async () => {
+    const state = setup();
+    let uses = 0;
+    state.service.register({
+        id: "restricted",
+        resource: "test",
+        label: "Restricted",
+        position: { x: 0, y: 0, z: 0 },
+        radius: 100,
+        requirements: { character: true, groups: [{ key: "student" }], items: [{ name: "wand" }] },
+        cooldownMs: 1000,
+        handler() { uses++; },
+    });
+    state.first.position.x = 500;
+    assert.strictEqual(await state.service.trigger(state.first, "restricted"), false);
+    state.advance(201);
+    state.first.position.x = 0;
+    state.items.clear();
+    assert.strictEqual(await state.service.trigger(state.first, "restricted"), false);
+    assert.strictEqual(uses, 0);
+    state.items.set("wand", 1);
+    state.advance(201);
+    assert.strictEqual(await state.service.trigger(state.first, "restricted"), true);
+    state.advance(201);
+    assert.strictEqual(await state.service.trigger(state.first, "restricted"), false);
+    assert.strictEqual(uses, 1);
+    state.advance(1001);
+    assert.strictEqual(await state.service.trigger(state.first, "restricted"), true);
+    assert.strictEqual(uses, 2);
+});
+
+test("filters snapshots and triggers by live game area", async () => {
+    const state = setup();
+    state.service.register({ id: "castle", resource: "test", label: "Castle", areaId: "Hogwarts", position: { x: 0, y: 0, z: 0 }, handler() {} });
+    state.service.register({ id: "hamlet", resource: "test", label: "Hamlet", areaId: "Overland", position: { x: 0, y: 0, z: 0 }, handler() {} });
+    state.first.messages.length = 0;
+    assert.strictEqual(state.service.sync(state.first), true);
+    const snapshot = JSON.parse(String(state.first.messages.at(-1)?.payload)) as { interactions: Array<{ id: string }> };
+    assert.deepStrictEqual(snapshot.interactions.map((entry) => entry.id), ["castle"]);
+    assert.strictEqual(await state.service.trigger(state.first, "hamlet"), false);
+    state.first.location = () => null;
+    state.first.messages.length = 0;
+    state.service.sync(state.first);
+    const travelling = JSON.parse(String(state.first.messages.at(-1)?.payload)) as { interactions: unknown[] };
+    assert.deepStrictEqual(travelling.interactions, []);
+});
+
+test("offers validated options, rechecks progress and enforces exclusive execution", async () => {
+    const state = setup();
+    let selected = "";
+    state.choose("brew");
+    state.service.register({
+        id: "cauldron",
+        resource: "hmp-potions",
+        label: "Cauldron",
+        position: { x: 0, y: 0, z: 0 },
+        options: [
+            { id: "locked", label: "Locked", requirements: { items: [{ name: "moonstone" }] }, handler() {} },
+            { id: "brew", label: "Brew", progress: { duration: 500, canCancel: true }, handler(context) { selected = context.option?.id || ""; } },
+        ],
+    });
+    assert.strictEqual(await state.service.trigger(state.first, "cauldron"), true);
+    assert.strictEqual(selected, "brew");
+    assert.strictEqual(state.progresses.length, 1);
+    const menu = state.menus[0] as { options: Array<{ id: string; disabled: boolean }> };
+    assert.strictEqual(menu.options.find((option) => option.id === "locked")?.disabled, true);
+
+    let release!: () => void;
+    const pending = new Promise<void>((resolve) => { release = resolve; });
+    state.service.register({
+        id: "exclusive",
+        resource: "test",
+        label: "Exclusive",
+        position: { x: 0, y: 0, z: 0 },
+        exclusive: true,
+        async handler() { await pending; },
+    });
+    state.advance(201);
+    const firstUse = state.service.trigger(state.first, "exclusive");
+    await Promise.resolve();
+    assert.strictEqual(await state.service.trigger(state.second, "exclusive"), false);
+    release();
+    assert.strictEqual(await firstUse, true);
+});
+
+test("client arbitrates one prompt, sends only its selected id and tears down", () => {
+    const handlers = new Map<string, (payload?: unknown) => unknown>();
+    const sent: Array<{ event: string; payload: unknown }> = [];
+    const prompts: unknown[][] = [];
+    let keyHandler: (() => void) | null = null;
+    let position = { x: 0, y: 0, z: 0 };
+    let locked = false;
+    let clock = 1000;
+    let cleared = false;
+    let hidden = 0;
+    const client = createInteractClient({
+        events: { on: (event, handler) => handlers.set(event, handler), emitServer: (event, payload) => sent.push({ event, payload }) },
+        input: { shortcuts: {
+            register(definition) {
+                keyHandler = () => { if (!definition.when || definition.when()) definition.handler("f", "down"); };
+                return () => { cleared = true; return true; };
+            },
+        } },
+        hud: { showPrompt: (...args) => prompts.push(args), hidePrompt: () => { hidden++; } },
+        localPlayer: { getPosition: () => position },
+        game: { areControlsLocked: () => locked },
+        timers: { setInterval: () => 99 as unknown as ReturnType<typeof setInterval>, clearInterval() { cleared = true; } },
+        now: () => clock,
+    });
+    assert.strictEqual(sent[0].event, "hmp-interact:ready");
+    assert.strictEqual(client.receiveSnapshot({ revision: 1, interactions: [
+        { id: "near", label: "Near", position: { x: 20, y: 0, z: 0 }, promptDistance: 100, promptOffsetZ: 50, priority: 0 },
+        { id: "priority", label: "Priority", position: { x: 50, y: 0, z: 0 }, promptDistance: 100, promptOffsetZ: 50, priority: 2 },
+    ] }), true);
+    assert.strictEqual(client.status().active, "priority");
+    assert.deepStrictEqual(prompts.at(-1), ["F", "Priority", 50, 0, 50]);
+    assert.ok(keyHandler);
+    (keyHandler as unknown as () => void)();
+    assert.deepStrictEqual(JSON.parse(String(sent.at(-1)?.payload)), { id: "priority", revision: 1 });
+    clock += 300;
+    locked = true;
+    assert.strictEqual(client.scan(), null);
+    assert.ok(hidden > 0);
+    locked = false;
+    position = { x: 1000, y: 0, z: 0 };
+    assert.strictEqual(client.scan(), null);
+    assert.strictEqual(client.receiveSnapshot({ revision: 0, interactions: [] }), false);
+    assert.strictEqual(client.stop(), true);
+    assert.strictEqual(client.stop(), false);
+    assert.strictEqual(cleared, true);
+});

@@ -7,6 +7,7 @@ const resourcesRoot = path.join(root, "resources");
 const outputRoot = path.join(root, "build", "hmp-foundation");
 const outputResources = path.join(outputRoot, "resources");
 const pack = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
+const releaseFiles = ["README.md", "INSTALL.md", "DATABASE.md", "COMPATIBILITY.md", "CHANGELOG.md", "CLOSED_TESTING.md", "LICENSE"];
 
 await rm(outputRoot, { recursive: true, force: true });
 await mkdir(outputResources, { recursive: true });
@@ -18,6 +19,9 @@ for (const entry of await readdir(resourcesRoot, { withFileTypes: true })) {
     const manifestPath = path.join(source, "package.json");
     const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
     if (!manifest.mafiahub || !manifest.name) throw new Error(`${entry.name} has no resource manifest`);
+    if (manifest.version !== pack.version) {
+        throw new Error(`${entry.name} is ${manifest.version}; official pack resources must match ${pack.version}`);
+    }
 
     const destination = path.join(outputResources, entry.name);
     await mkdir(destination, { recursive: true });
@@ -40,9 +44,15 @@ for (const entry of await readdir(resourcesRoot, { withFileTypes: true })) {
 
 if (!packaged.length) throw new Error("No hmp-* resources were packaged");
 await writeFile(path.join(outputRoot, "foundation.json"), JSON.stringify({
+    schemaVersion: 1,
     name: pack.name,
     version: pack.version,
+    versionPolicy: "pack-locked",
+    compatibility: "COMPATIBILITY.md",
     resources: packaged,
 }, null, 2) + "\n");
+for (const name of releaseFiles) await cp(path.join(root, name), path.join(outputRoot, name));
+await mkdir(path.join(outputRoot, "examples"), { recursive: true });
+await cp(path.join(root, "examples", "config"), path.join(outputRoot, "examples", "config"), { recursive: true });
 
 console.log(`Packaged ${packaged.length} resource(s) in ${path.relative(root, outputRoot)}`);

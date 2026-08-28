@@ -1,0 +1,11 @@
+{
+  "maxCharacters": 4,
+  "autoSelectSingleCharacter": false,
+  "duplicateSession": "reject-new",
+  "kickDuplicateSession": false,
+  "identityOrder": [
+    "steamId",
+    "discordId",
+    "hardwareId"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "name": "hmp-blips",
+  "version": "0.1.0",
+  "private": true,
+  "author": "HogwartsMP",
+  "description": "Owner-scoped map, minimap, compass, search-area, and player tracking markers for HogwartsMP.",
+  "license": "SEE LICENSE IN LICENSE",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "tsx test/blips.test.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "smoke": "node test/bundle.test.js"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "typescript": "5.9.3"
+  },
+  "mafiahub": {
+    "server": "dist/server.js",
+    "client": "dist/client.js",
+    "priority": -475,
+    "errorBehavior": "stop",
+    "exports": ["markers", "players", "status"],
+    "resourceDependencies": [
+      { "name": "hmp-lib", "version": "0.1.0" },
+      { "name": "hmp-core", "version": "0.1.0" }
+    ]
+  }
+}

@@ -1,4 +1,10 @@
 node_modules/
+.pixi/
+pixi.toml
+pixi.lock
 build/
 resources/*/dist/
 resources/*/dist/
+scripts/init-dev-config.ps1
+scripts/link-resources.ps1
+scripts/mysql-dev.ps1

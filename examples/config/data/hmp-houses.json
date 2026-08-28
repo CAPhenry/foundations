@@ -1,0 +1,13 @@
+{
+  "enableCommands": true,
+  "houseCommand": "house",
+  "pointsCommand": "points",
+  "adminGroups": [
+    {
+      "key": "admin",
+      "minimumGrade": 1
+    }
+  ],
+  "groupPrefix": "house:",
+  "allowNegativePoints": true
+}
