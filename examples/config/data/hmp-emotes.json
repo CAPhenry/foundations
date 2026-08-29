@@ -1,7 +1,7 @@
 {
   "command": "emote",
   "enabled": true,
-  "browseUnaliased": false,
+  "allowAll": false,
   "maxFavorites": 300,
   "maxAliases": 200,
   "editorGroups": [

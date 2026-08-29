@@ -59,7 +59,7 @@ function createItemRegistry(): Registry {
         const canonicalCollision = aliases.get(definition.name);
         if (canonicalCollision && canonicalCollision !== definition.name) throw new Error(`item '${definition.name}' is already an alias for ${canonicalCollision}`);
         if (definition.nativeId) {
-            const mapped = nativeIds.get(definition.nativeId);
+            const mapped = nativeIds.get(definition.nativeId.toLowerCase());
             if (mapped && mapped !== definition.name) throw new Error(`native item '${definition.nativeId}' is already mapped to ${mapped}`);
         }
         for (const alias of definition.aliases) {
@@ -67,10 +67,10 @@ function createItemRegistry(): Registry {
             if (definitions.has(alias) && alias !== definition.name) throw new Error(`item alias '${alias}' is already a canonical item`);
             if (mapped && mapped !== definition.name) throw new Error(`item alias '${alias}' is already mapped to ${mapped}`);
         }
-        if (current?.nativeId) nativeIds.delete(current.nativeId);
+        if (current?.nativeId) nativeIds.delete(current.nativeId.toLowerCase());
         for (const alias of current?.aliases || []) aliases.delete(alias);
         definitions.set(definition.name, definition);
-        if (definition.nativeId) nativeIds.set(definition.nativeId, definition.name);
+        if (definition.nativeId) nativeIds.set(definition.nativeId.toLowerCase(), definition.name);
         for (const alias of definition.aliases) aliases.set(alias, definition.name);
         return definition;
     }
@@ -81,18 +81,21 @@ function createItemRegistry(): Registry {
         const current = definitions.get(key);
         if (!current || (resource && current.resource !== resource)) return false;
         definitions.delete(key);
-        if (current.nativeId) nativeIds.delete(current.nativeId);
+        if (current.nativeId) nativeIds.delete(current.nativeId.toLowerCase());
         for (const alias of current.aliases) aliases.delete(alias);
         return true;
     }
 
     function get(name: string): NormalizedItemDefinition | null {
         const requested = String(name || "").toLowerCase();
-        return definitions.get(requested) || definitions.get(aliases.get(requested) || "") || null;
+        return definitions.get(requested)
+            || definitions.get(aliases.get(requested) || "")
+            || definitions.get(nativeIds.get(requested) || "")
+            || null;
     }
 
     function fromNative(itemId: string): NormalizedItemDefinition | null {
-        const mapped = nativeIds.get(String(itemId || ""));
+        const mapped = nativeIds.get(String(itemId || "").toLowerCase());
         return mapped ? definitions.get(mapped) || null : null;
     }
 

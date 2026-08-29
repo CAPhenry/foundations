@@ -108,6 +108,8 @@ if (config.enableCommands) Events.on("chatCommand", (player: Player, _message: s
     })().catch((error) => { logger.warn(`Command failed: ${messageOf(error)}`); reply(messageOf(error)); });
 });
 
-service.start()
-    .then(() => logger.info("Character progression, replay-safe rewards, and managed talents ready"))
-    .catch((error) => logger.error(`Startup failed: ${messageOf(error)}`));
+Events.on("resourceStart", async (name?: string) => {
+    if (name && name !== "hmp-progression") return;
+    await service.start();
+    logger.info("Character progression, replay-safe rewards, and managed talents ready");
+});

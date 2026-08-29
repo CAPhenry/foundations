@@ -31,7 +31,10 @@ for (const name of ["status", "identity", "accounts", "sessions", "characters", 
 
 Events.on("playerConnect", (player: unknown) => {
     const currentPlayer = player as Player;
-    core.connect(currentPlayer).catch((error: unknown) => logger.error(`Could not initialize ${Hmp.player.format(currentPlayer)}: ${messageOf(error)}`));
+    core.connect(currentPlayer).catch((error: unknown) => {
+        logger.error(`Could not initialize ${Hmp.player.format(currentPlayer)}: ${messageOf(error)}`);
+        if (typeof currentPlayer.kick === "function") currentPlayer.kick("Server services are temporarily unavailable. Please try again later.");
+    });
 });
 
 Events.on("playerDisconnect", (player: unknown) => {
@@ -47,7 +50,9 @@ Events.on("resourceStop", (name: unknown) => {
     core.removeIdentityProvidersForResource(name as string);
 });
 
-core.start()
-    .then(() => logger.info("Accounts, characters, groups and metadata are ready"))
-    .catch((error: unknown) => logger.error(`Startup failed: ${messageOf(error)}`));
+Events.on("resourceStart", async (name: unknown) => {
+    if (name && name !== "hmp-core") return;
+    await core.start();
+    logger.info("Accounts, characters, groups and metadata are ready");
+});
 // TypeScript source.

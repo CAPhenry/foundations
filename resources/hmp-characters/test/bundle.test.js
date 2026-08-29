@@ -39,6 +39,7 @@ require(path.resolve(__dirname, "..", "dist", "server.js"));
 assert.deepStrictEqual([...exportsSeen.keys()], ["ui"]);
 assert.strictEqual(typeof exportsSeen.get("ui").open, "function");
 assert.ok(serverHandlers.has("worldReady"));
+assert.ok(serverHandlers.has("playerAppearanceChanged"));
 assert.ok(serverHandlers.has("client:hmp-characters:select"));
 
 global.Events = {

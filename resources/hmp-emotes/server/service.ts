@@ -1,5 +1,5 @@
 import normalizeModule = require("../shared/normalize");
-import type { HmpEmoteAliasRecord, HmpEmoteDefinition, HmpEmotePlayer } from "../types";
+import type { HmpEmoteAliasRecord, HmpEmoteCandidate, HmpEmoteDefinition, HmpEmotePlayer } from "../types";
 import type { EmoteDependencies, EmoteService, PersistedAlias } from "./internal";
 
 const { nameOf, pathOf, normalizeDefinition, normalizeConfigured } = normalizeModule;
@@ -10,6 +10,19 @@ function favoritePath(value: unknown): string {
     const path = String(value || "").trim();
     if (!path || path.length > 256) throw new TypeError("favorite path must contain 1-256 characters");
     return path;
+}
+
+function suggestedAlias(rawPath: unknown): string {
+    const path = pathOf(rawPath);
+    const objectName = (path.split(".").pop() || path.split("/").pop() || "emote")
+        .replace(/_C$/i, "")
+        .replace(/^ABL_/i, "")
+        .replace(/(?:_POSE)?_ANM$/i, "");
+    return objectName
+        .replace(/[^a-z0-9]+/gi, "_")
+        .replace(/^_+|_+$/g, "")
+        .toLowerCase()
+        .slice(0, 24) || "emote";
 }
 
 function createEmoteService<P extends HmpEmotePlayer>(dependencies: EmoteDependencies<P>): EmoteService<P> {
@@ -54,6 +67,18 @@ function createEmoteService<P extends HmpEmotePlayer>(dependencies: EmoteDepende
 
     function publicDefinitions(): HmpEmoteDefinition[] {
         return [...effectiveMap().values()].map(({ name, path, kind, channel, resource }) => ({ name, path, kind, channel, ...(resource ? { resource } : {}) })).sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    function availableAlias(path: string): string {
+        const definitions = effectiveMap();
+        const base = suggestedAlias(path);
+        if (!definitions.has(base)) return base;
+        for (let sequence = 2; sequence <= 9999; sequence++) {
+            const suffix = `_${sequence}`;
+            const candidate = `${base.slice(0, 24 - suffix.length)}${suffix}`;
+            if (!definitions.has(candidate)) return candidate;
+        }
+        throw new Error("Could not generate a unique emote alias");
     }
 
     function emit(player: P, name: string, payload: unknown): boolean {
@@ -104,7 +129,8 @@ function createEmoteService<P extends HmpEmotePlayer>(dependencies: EmoteDepende
         return emit(player, "hmp-emotes:aliases", {
             aliases: Object.fromEntries(publicDefinitions().map((entry) => [entry.name, entry])),
             canEdit: await canEdit(player),
-            browseUnaliased: config.browseUnaliased,
+            allowAll: config.allowAll,
+            browseUnaliased: config.allowAll,
         });
     }
 
@@ -164,6 +190,29 @@ function createEmoteService<P extends HmpEmotePlayer>(dependencies: EmoteDepende
             }
             return persist(player, { ...definition, source: "database", hidden: false });
         },
+        async allow(player: P, raw: HmpEmoteCandidate) {
+            await startPromise;
+            await requireEditor(player);
+            const path = pathOf(raw?.path);
+            const existing = [...effectiveMap().values()].find((entry) => entry.path === path);
+            if (existing) return existing;
+            if (effectiveMap().size >= config.maxAliases) throw new Error(`Alias list is full (${config.maxAliases})`);
+            const definition = normalizeDefinition({
+                name: availableAlias(path),
+                path,
+                kind: raw?.kind === "ability" ? "ability" : "pose",
+                channel: raw?.channel === "PartialBody" ? "PartialBody" : "FullBody",
+            });
+            return persist(player, { ...definition, source: "database", hidden: false });
+        },
+        async deny(player: P, rawPath: string) {
+            await startPromise;
+            await requireEditor(player);
+            const path = pathOf(rawPath);
+            const matches = [...effectiveMap().values()].filter((entry) => entry.path === path);
+            for (const entry of matches) await persist(player, { ...entry, path: "", source: "database", hidden: true });
+            return matches.length;
+        },
         async hide(player: P, rawName: string) {
             const name = nameOf(rawName);
             const existing = effectiveMap().get(name);
@@ -172,10 +221,7 @@ function createEmoteService<P extends HmpEmotePlayer>(dependencies: EmoteDepende
             return true;
         },
         async clearPath(player: P, rawPath: string) {
-            const path = pathOf(rawPath);
-            const matches = [...effectiveMap().values()].filter((entry) => entry.path === path);
-            for (const entry of matches) await persist(player, { ...entry, path: "", source: "database", hidden: true });
-            return matches.length;
+            return aliases.deny(player, rawPath);
         },
     });
 
@@ -229,4 +275,4 @@ function createEmoteService<P extends HmpEmotePlayer>(dependencies: EmoteDepende
     });
 }
 
-export = { createEmoteService, favoritePath, FAVORITES_KEY, UI_CONTRACT };
+export = { createEmoteService, favoritePath, suggestedAlias, FAVORITES_KEY, UI_CONTRACT };

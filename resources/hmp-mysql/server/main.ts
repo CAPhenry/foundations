@@ -20,12 +20,10 @@ Events.on("resourceStop", (name: unknown) => {
     database.close().catch((error: unknown) => console.error(`[hmp-mysql] pool close failed: ${error instanceof Error ? error.message : String(error)}`));
 });
 
-if (!config.enabled) {
-    console.info("[hmp-mysql] disabled; set HMP_MYSQL_URL or create data/hmp-mysql.json to enable it");
-} else {
-    database.api.ready().then((connected) => {
-        if (connected) console.info(`[hmp-mysql] connected to ${config.target}`);
-        else console.error(`[hmp-mysql] could not connect to ${config.target}; queries will keep retrying through the pool`);
-    });
-}
+Events.on("resourceStart", async (name: unknown) => {
+    if (name && name !== "hmp-mysql") return;
+    if (!config.enabled) throw new Error("hmp-mysql is not configured; set HMP_MYSQL_URL or create data/hmp-mysql.json");
+    if (!await database.api.ready()) throw new Error(`could not connect to ${config.target}`);
+    console.info(`[hmp-mysql] connected to ${config.target}`);
+});
 // TypeScript source.

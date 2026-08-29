@@ -54,14 +54,14 @@ function normalizeAlert(raw: HmpUiAlert): HmpUiAlert {
     };
 }
 
-function normalizeSelectOptions(raw: unknown): HmpUiSelectOption[] {
+function normalizeSelectOptions(raw: unknown, limit = 64): HmpUiSelectOption[] {
     const options: HmpUiSelectOption[] = [];
-    for (const entry of Array.isArray(raw) ? raw.slice(0, 64) : []) {
+    for (const entry of Array.isArray(raw) ? raw.slice(0, limit) : []) {
         if (!entry || typeof entry !== "object") continue;
         const value = entry as Record<string, unknown>;
         const label = clean(value.label, 80);
         const optionValue = clean(value.value, 128);
-        if (label && optionValue) options.push({ label, value: optionValue });
+        if (label && optionValue) options.push({ label, value: optionValue, description: clean(value.description, 180) || undefined });
     }
     return options;
 }
@@ -94,7 +94,8 @@ function normalizeInput(raw: HmpUiInputDialog): HmpUiInputDialog {
             if (entry.max !== undefined && Number.isFinite(Number(entry.max))) field.max = Number(entry.max);
         } else if (entry.default !== undefined) field.default = clean(entry.default, 1000);
         if (fieldType === "select") {
-            field.options = normalizeSelectOptions(entry.options);
+            field.searchable = entry.searchable === true;
+            field.options = normalizeSelectOptions(entry.options, 32);
             if (!field.options.length) throw new TypeError(`select field '${name}' requires options`);
         }
         fields.push(field);

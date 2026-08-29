@@ -10,7 +10,7 @@ function loadConfig(Hmp: HmpLibServer<HmpEmotePlayer>, options: { env?: NodeJS.P
     const defaults: EmoteConfig = {
         command: "emote",
         enabled: true,
-        browseUnaliased: false,
+        allowAll: false,
         maxFavorites: 300,
         maxAliases: 200,
         editorGroups: [{ key: "admin", minimumGrade: 1 }],
@@ -25,7 +25,10 @@ function loadConfig(Hmp: HmpLibServer<HmpEmotePlayer>, options: { env?: NodeJS.P
     });
     loaded.command = String(env.HMP_EMOTES_COMMAND || loaded.command || defaults.command).trim().toLowerCase();
     loaded.enabled = env.HMP_EMOTES_ENABLED === undefined ? loaded.enabled !== false : Hmp.config.env.boolean(env.HMP_EMOTES_ENABLED, true);
-    loaded.browseUnaliased = env.HMP_EMOTES_BROWSE_UNALIASED === undefined ? loaded.browseUnaliased === true : Hmp.config.env.boolean(env.HMP_EMOTES_BROWSE_UNALIASED, false);
+    const allowAllEnvironment = env.HMP_EMOTES_ALLOW_ALL ?? env.HMP_EMOTES_BROWSE_UNALIASED;
+    loaded.allowAll = allowAllEnvironment === undefined
+        ? loaded.allowAll === true || loaded.browseUnaliased === true
+        : Hmp.config.env.boolean(allowAllEnvironment, false);
     loaded.maxFavorites = Math.max(1, Math.min(300, Math.trunc(Number(loaded.maxFavorites)) || defaults.maxFavorites));
     loaded.maxAliases = Math.max(1, Math.min(1000, Math.trunc(Number(loaded.maxAliases)) || defaults.maxAliases));
     if (!Array.isArray(loaded.editorGroups)) throw new TypeError("hmp-emotes editorGroups must be an array");

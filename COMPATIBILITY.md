@@ -6,7 +6,7 @@ upstream release identifier.
 
 | Component | Supported baseline | Status | Notes |
 |---|---|---|---|
-| HMP Foundation | `0.1.0` pack and resources | Supported | All twenty-two resources must use the same version. |
+| HMP Foundation | `0.1.0` pack and resources | Supported | All twenty-three resources must use the same version. |
 | HogwartsMP scripting host | Mod commit `d3275c04` or newer | Closed-test | Pin the eventual upstream release tag before a public Foundation release. |
 | Hogwarts Legacy client data | Steam build ID `20773316` | Supported baseline | The native inventory catalog declares this game-data build. Other builds require revalidation. |
 | Dedicated-server JavaScript | Embedded Node.js 22 runtime | Supported | Release resources contain bundled dependencies. |

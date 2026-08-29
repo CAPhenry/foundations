@@ -32,6 +32,8 @@ Events.on("resourceStop", (name?: string) => {
     banking.removeForResource(name);
 });
 
-banking.start()
-    .then(() => logger.info("Bank accounts, cash bridge and transaction ledger ready"))
-    .catch((error) => logger.error(`Startup failed: ${messageOf(error)}`));
+Events.on("resourceStart", async (name?: string) => {
+    if (name && name !== "hmp-banking") return;
+    await banking.start();
+    logger.info("Bank accounts, cash bridge and transaction ledger ready");
+});

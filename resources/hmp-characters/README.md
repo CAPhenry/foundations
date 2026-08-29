@@ -26,8 +26,9 @@ There is no second character database and no nickname-as-identity fallback.
 3. Selection calls `hmp-core.characters.select` and remembers the last character on the account.
 4. During `hmp:character:loading`, the stored appearance is applied and its native reload acknowledgement is awaited before transmog is restored and the core emits `loaded`.
 
-The appearance is sampled after native creator confirmation. The game updates its appearance blob
-asynchronously, so the server waits briefly for it to change rather than saving the pre-creator look.
+After creator confirmation, the server records the current appearance revision and waits for a newer
+`playerAppearanceChanged` publication. That publication is emitted only after the game's native
+normalization has settled, so character cards receive the same complete look used by live players.
 
 Portrait cards call the Framework-provided client `Portrait` API directly. They do not require or
 load the mod repository's standalone `portrait` resource. The supported HogwartsMP client supplies
@@ -63,7 +64,6 @@ Optional `data/hmp-characters.json`:
   "allowDelete": true,
   "allowCloseWithActiveCharacter": true,
   "command": "characters",
-  "appearancePollMs": 200,
   "appearanceTimeoutMs": 6000,
   "title": "Choose Your Wizard",
   "subtitle": "Every story begins with a name."

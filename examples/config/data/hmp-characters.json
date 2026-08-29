@@ -3,7 +3,6 @@
   "allowDelete": true,
   "allowCloseWithActiveCharacter": true,
   "command": "characters",
-  "appearancePollMs": 200,
   "appearanceTimeoutMs": 6000,
   "title": "Choose Your Wizard",
   "subtitle": "Every story begins with a name."

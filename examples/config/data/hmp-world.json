@@ -1,0 +1,22 @@
+{
+  "environment": {
+    "weather": "Clear",
+    "time": {
+      "hour": 9,
+      "minute": 0,
+      "second": 0,
+      "scale": 1
+    },
+    "date": {
+      "day": 1,
+      "month": 9,
+      "year": 0
+    },
+    "season": "autumn"
+  },
+  "policy": {
+    "removeBoundaryVolumes": true,
+    "ambientPopulation": false,
+    "nativeEncounters": false
+  }
+}

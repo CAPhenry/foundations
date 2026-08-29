@@ -9,7 +9,9 @@ Configuration files are provided for resources with file-backed settings. `hmp-l
 `hmp-banking`, `hmp-interact`, `hmp-shops`, and `hmp-jobs` use built-in defaults and registration APIs;
 server-specific banks, jobs, interactions, and shops belong in a separate gameplay resource.
 `hmp-doors` includes a file-backed example because physical-door access is a server-wide world policy.
-`hmp-emotes` includes one for curated aliases, editor groups, catalog visibility, and renderer selection.
+`hmp-world` includes the baseline weather, clock, date, season, mount-boundary, ambient-population, and
+native-encounter policy applied to every client.
+`hmp-emotes` includes one for curated aliases, editor groups, the `allowAll` catalog policy, and renderer selection.
 `hmp-audio` includes one for Wwise aliases, positional range, handle limits, and closed-test commands.
 `hmp-blips` includes one for marker lifetimes, player visibility, native tint/scale, and private probes.
 `hmp-spells` includes a closed-testing starter kit, group rules, admin commands, and cast-report limits.
@@ -33,6 +35,7 @@ Review at minimum:
 - custom item names, weights, stack sizes, and resource-hosted icon URLs;
 - the inventory UI URL if the server replaces the bundled Arcanum renderer;
 - the physical-door default, group exceptions, and whether closed-test door commands remain enabled;
+- the starting environment and whether native mount boundaries, ambient population, and encounters are enabled;
 - which emotes players may browse, which groups may curate aliases, and the emote UI URL;
 - audio aliases, positional delivery range, handle limits, and whether `/audio` testing is enabled;
 - marker TTL/limits, whether every remote player is shown, and the player-blip tint/scale settings;

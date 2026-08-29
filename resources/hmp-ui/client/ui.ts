@@ -40,6 +40,7 @@ interface UiClientOptions {
     url?: string;
     retryMs?: number;
     maxRetries?: number;
+    transitionGraceMs?: number;
     setTimer?: typeof setTimeout;
     clearTimer?: typeof clearTimeout;
     game?: { notify(message: string): void };
@@ -64,6 +65,7 @@ function createUiClient(options: UiClientOptions): HmpUiClient & {
     const url = options.url || "http://resources/hmp-ui/dist/index.html";
     const retryMs = options.retryMs ?? 1000;
     const maxRetries = options.maxRetries ?? 20;
+    const transitionGraceMs = Math.max(0, Math.trunc(Number(options.transitionGraceMs ?? 160)) || 0);
     const setTimer = options.setTimer || setTimeout;
     const clearTimer = options.clearTimer || clearTimeout;
     const queue: RequestRecord[] = [];
@@ -75,6 +77,7 @@ function createUiClient(options: UiClientOptions): HmpUiClient & {
     let notificationsVisible = false;
     let retryCount = 0;
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let transitionTimer: ReturnType<typeof setTimeout> | null = null;
     let localSequence = 0;
     let stopped = false;
     let controlLease: { release(): boolean } | null = null;
@@ -110,7 +113,7 @@ function createUiClient(options: UiClientOptions): HmpUiClient & {
         web.on(view, "response", onPageResponse);
         web.on(view, "idle", () => {
             notificationsVisible = false;
-            if (!active) web.hideView(view);
+            if (!active && !transitionTimer) web.hideView(view);
         });
         return true;
     }
@@ -132,6 +135,31 @@ function createUiClient(options: UiClientOptions): HmpUiClient & {
         if (notificationsVisible) web.showView(view);
     }
 
+    function cancelTransition(): void {
+        if (!transitionTimer) return;
+        clearTimer(transitionTimer);
+        transitionTimer = null;
+    }
+
+    function endPresentation(id?: string): void {
+        cancelTransition();
+        const wasFocused = focused;
+        releaseFocus();
+        if (view < 0) return;
+        web.emit(view, "clear", id ? { id } : {});
+        if (!wasFocused && !notificationsVisible) web.hideView(view);
+    }
+
+    function bridgePresentation(id: string): void {
+        cancelTransition();
+        if (transitionGraceMs <= 0) { endPresentation(id); return; }
+        transitionTimer = setTimer(() => {
+            transitionTimer = null;
+            if (active || queue.length) { pump(); return; }
+            endPresentation(id);
+        }, transitionGraceMs);
+    }
+
     function respond(record: RequestRecord, result: unknown): void {
         if (record.remote) events.emitServer("hmp-ui:response", JSON.stringify({ id: record.id, result }));
         else record.resolve?.(result);
@@ -149,10 +177,9 @@ function createUiClient(options: UiClientOptions): HmpUiClient & {
         active = null;
         respond(completed, result);
         const wasFocused = focused;
-        releaseFocus();
-        if (view >= 0) web.emit(view, "clear", { id: completed.id });
+        if (wasFocused) bridgePresentation(completed.id);
+        else endPresentation(completed.id);
         pump();
-        if (!wasFocused && !active && !queue.length && !notificationsVisible && view >= 0) web.hideView(view);
         return true;
     }
 
@@ -164,11 +191,12 @@ function createUiClient(options: UiClientOptions): HmpUiClient & {
 
     function pump(): void {
         if (active || !queue.length || !ensureView() || !ready) return;
+        cancelTransition();
         active = queue.shift() || null;
         if (!active) return;
         web.showView(view);
         const shouldFocus = active.type !== "progress" || (active.payload as HmpUiProgress).canCancel === true;
-        if (shouldFocus) {
+        if (shouldFocus && !focused) {
             controlLease = options.input?.controls.acquire({ resource: "hmp-ui", id: "dialog" }) || null;
             web.focusView(view);
             focused = true;
@@ -211,6 +239,7 @@ function createUiClient(options: UiClientOptions): HmpUiClient & {
     }
 
     function receiveClose(_raw?: unknown): boolean {
+        cancelTransition();
         if (active) {
             const current = active;
             active = null;
@@ -235,6 +264,7 @@ function createUiClient(options: UiClientOptions): HmpUiClient & {
         stopped = true;
         receiveClose({ reason: "resource stopped" });
         if (retryTimer) { clearTimer(retryTimer); retryTimer = null; }
+        cancelTransition();
         if (view >= 0) web.destroyView(view);
         view = -1;
         ready = false;

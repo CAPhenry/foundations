@@ -43,6 +43,24 @@ Events.onClient("hmp-emotes:favorite-toggle", (player, raw) => {
     const payload = parse(raw);
     run(player, () => service.favorites.toggle(player, String(payload.path || "")));
 });
+Events.onClient("hmp-emotes:allow-toggle", (player, raw) => {
+    if (!actions.allow(player.id)) return;
+    const payload = parse(raw);
+    run(player, async () => {
+        const path = String(payload.path || "");
+        if (payload.allowed === true) {
+            const entry = await service.aliases.allow(player, {
+                path,
+                kind: payload.kind === "ability" ? "ability" : "pose",
+                channel: payload.channel === "PartialBody" ? "PartialBody" : "FullBody",
+            });
+            player.sendChat?.(`[emotes] allowed '${entry.name}'`);
+        } else {
+            const removed = await service.aliases.deny(player, path);
+            player.sendChat?.(`[emotes] removed ${removed} server alias${removed === 1 ? "" : "es"}`);
+        }
+    });
+});
 Events.onClient("hmp-emotes:alias-set", (player, raw) => {
     if (!actions.allow(player.id)) return;
     const payload = parse(raw);
@@ -120,6 +138,8 @@ Events.on("chatCommand", (player: HmpEmotePlayer, message: string, command: stri
     void router.handle(player, message, command, args);
 });
 
-service.ready()
-    .then(() => logger.info(`Emotes ready with ${service.status().aliases} alias(es)`))
-    .catch((error) => logger.error(`Startup failed: ${messageOf(error)}`));
+Events.on("resourceStart", async (name?: string) => {
+    if (name && name !== "hmp-emotes") return;
+    await service.ready();
+    logger.info(`Emotes ready with ${service.status().aliases} alias(es)`);
+});

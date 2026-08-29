@@ -1,12 +1,35 @@
 import type { HmpBankTransaction } from "../../hmp-banking/types";
-import type { HmpUiContextOption } from "../../hmp-ui/types";
+import type { HmpUiContextOption, HmpUiSelectOption } from "../../hmp-ui/types";
 import type { HmpAdmin, HmpAdminBan, HmpAdminCapability, HmpAdminPlayerSummary } from "../types";
-import type { Banking, Player, Ui } from "./internal";
+import type { Banking, Inventory, Player, Ui } from "./internal";
 
 type AdminService = Pick<HmpAdmin<Player>, "permissions" | "players" | "actions" | "moderation" | "audit" | "status">;
 
-function createAdminUi(options: { admin: AdminService; ui: Ui; banking: Banking }) {
-    const { admin, ui, banking } = options;
+const MAX_INVENTORY_CHOICES = 32;
+
+function inventoryOptions(inventory: Inventory, rawQuery = ""): HmpUiSelectOption[] {
+    const query = String(rawQuery || "").trim().toLowerCase();
+    const terms = query.split(/\s+/).filter(Boolean);
+    return inventory.items.list()
+        .flatMap((item) => {
+            const label = item.label || item.nativeId || item.name;
+            const names = [label, item.name, item.nativeId, ...(item.aliases || [])].filter(Boolean).map((value) => String(value).toLowerCase());
+            const haystack = [...names, item.category, item.holder].filter(Boolean).join(" ").toLowerCase();
+            if (terms.some((term) => !haystack.includes(term))) return [];
+            const rank = !query ? 2 : names.includes(query) ? 0 : names.some((value) => value.startsWith(query)) ? 1 : 2;
+            return [{
+                label: item.nativeId ? `${label} · ${item.nativeId}` : `${label} · ${item.name}`,
+                value: item.name,
+                description: [item.native ? "Native" : "Custom", item.category, item.holder].filter(Boolean).join(" · "),
+                rank,
+            }];
+        })
+        .sort((left, right) => left.rank - right.rank || left.label.localeCompare(right.label))
+        .map(({ rank: _rank, ...option }) => option);
+}
+
+function createAdminUi(options: { admin: AdminService; ui: Ui; banking: Banking; inventory: Inventory }) {
+    const { admin, ui, banking, inventory } = options;
     const openMenus = new Set<number>();
 
     const text = (value: unknown): string => String(value ?? "").trim();
@@ -66,18 +89,51 @@ function createAdminUi(options: { admin: AdminService; ui: Ui; banking: Banking 
     }
 
     async function inventoryMenu(player: Player, target: HmpAdminPlayerSummary): Promise<void> {
-        const result = await ui.input(player, {
-            title: `Inventory · ${target.nickname}`,
-            fields: [
-                { name: "operation", label: "Operation", type: "select", options: [{ label: "Give", value: "give" }, { label: "Remove", value: "remove" }] },
-                { name: "item", label: "Item ID", required: true },
-                { name: "amount", label: "Amount", type: "number", min: 1, max: 100000, default: 1, required: true },
-                { name: "reason", label: "Reason", type: "textarea", required: true },
-            ],
-            submitLabel: "Apply",
-        });
-        if (!result) return;
-        await run(player, () => admin.actions.inventory(player, target.playerId, text(result.operation) as "give" | "remove", text(result.item), number(result.amount), text(result.reason)), "Inventory updated.");
+        while (openMenus.has(player.id)) {
+            const search = await ui.input(player, {
+                title: `Search inventory catalog · ${target.nickname}`,
+                fields: [{
+                    name: "query", label: "Item search", required: true,
+                    placeholder: "BroomHouse, broom, Wiggenweld, native:galleons…",
+                    description: "Searches friendly names, Foundation names, native IDs, aliases, categories, and holders.",
+                }],
+                submitLabel: "Find items",
+            });
+            if (!search) return;
+            const query = text(search.query);
+            const items = inventoryOptions(inventory, query);
+            if (!items.length) {
+                ui.notify(player, { title: "No matching items", description: `Nothing in the registered catalog matches '${query}'.`, tone: "warning" });
+                continue;
+            }
+            if (items.length > MAX_INVENTORY_CHOICES) {
+                ui.notify(player, {
+                    title: "Refine item search",
+                    description: `${items.length} items match '${query}'. Narrow the search to ${MAX_INVENTORY_CHOICES} or fewer results.`,
+                    tone: "warning",
+                    duration: 7000,
+                });
+                continue;
+            }
+            const result = await ui.input(player, {
+                title: `Inventory · ${target.nickname}`,
+                fields: [
+                    { name: "operation", label: "Operation", type: "select", options: [{ label: "Give", value: "give" }, { label: "Remove", value: "remove" }] },
+                    {
+                        name: "item", label: "Item", type: "select", searchable: true, required: true,
+                        placeholder: "Filter matching items…",
+                        description: `${items.length} match${items.length === 1 ? "" : "es"} for '${query}'.`,
+                        options: items,
+                    },
+                    { name: "amount", label: "Amount", type: "number", min: 1, max: 100000, default: 1, required: true },
+                    { name: "reason", label: "Reason", type: "textarea", required: true },
+                ],
+                submitLabel: "Apply",
+            });
+            if (!result) return;
+            await run(player, () => admin.actions.inventory(player, target.playerId, text(result.operation) as "give" | "remove", text(result.item), number(result.amount), text(result.reason)), "Inventory updated.");
+            return;
+        }
     }
 
     async function groupMenu(player: Player, target: HmpAdminPlayerSummary): Promise<void> {
@@ -159,7 +215,7 @@ function createAdminUi(options: { admin: AdminService; ui: Ui; banking: Banking 
             if (allowed(capabilities, "admin.teleport")) actions.push({ id: "goto", title: "Go to player", description: "Stream your character near this player." }, { id: "bring", title: "Bring player", description: "Stream this player near your character." });
             if (allowed(capabilities, "admin.freeze")) actions.push({ id: target.frozen ? "release" : "freeze", title: target.frozen ? "Release player" : "Freeze player", description: "Uses the Framework's authoritative movement hold." });
             if (allowed(capabilities, "admin.warn")) actions.push({ id: "warn", title: "Issue warning", description: "Record and deliver a staff warning." }, { id: "warnings", title: "Warning history", description: "Review prior warnings." });
-            if (allowed(capabilities, "admin.inventory")) actions.push({ id: "inventory", title: "Inventory", description: "Give or remove a custom inventory item." });
+            if (allowed(capabilities, "admin.inventory")) actions.push({ id: "inventory", title: "Inventory", description: "Give or remove a registered custom or native item." });
             if (allowed(capabilities, "admin.groups")) actions.push({ id: "groups", title: "Groups", description: "Change account or character roles." });
             if (allowed(capabilities, "admin.jobs")) actions.push({ id: "jobs", title: "Employment", description: "Hire, fire, or change a job grade." });
             if (allowed(capabilities, "admin.banking")) actions.push({ id: "banking", title: "Banking", description: "Apply an audited credit or debit." });
@@ -282,4 +338,4 @@ function createAdminUi(options: { admin: AdminService; ui: Ui; banking: Banking 
     return Object.freeze({ open, close: (player: Player) => { openMenus.delete(player.id); return ui.close(player, "Admin menu closed"); }, status: () => ({ openMenus: openMenus.size }) });
 }
 
-export = { createAdminUi };
+export = { createAdminUi, inventoryOptions };

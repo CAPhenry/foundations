@@ -32,6 +32,8 @@ Events.on("resourceStop", (name?: string) => {
     jobs.removeForResource(name);
 });
 
-jobs.start()
-    .then(() => logger.info("Employment, duty, permissions and payroll ready"))
-    .catch((error) => logger.error(`Startup failed: ${messageOf(error)}`));
+Events.on("resourceStart", async (name?: string) => {
+    if (name && name !== "hmp-jobs") return;
+    await jobs.start();
+    logger.info("Employment, duty, permissions and payroll ready");
+});

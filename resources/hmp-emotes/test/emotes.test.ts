@@ -4,7 +4,7 @@ import serviceModule = require("../server/service");
 import type { HmpEmoteAliasRecord } from "../types";
 
 const { normalizeDefinition, normalizeConfigured } = normalizeModule;
-const { createEmoteService, FAVORITES_KEY, favoritePath } = serviceModule;
+const { createEmoteService, FAVORITES_KEY, favoritePath, suggestedAlias } = serviceModule;
 
 async function run(): Promise<void> {
     assert.deepStrictEqual(normalizeConfigured("Wave", { path: "/Game/Wave.Wave", kind: "ability", channel: "PartialBody" }), {
@@ -13,6 +13,7 @@ async function run(): Promise<void> {
     assert.throws(() => normalizeDefinition({ name: "bad name", path: "/Game/X.X" }), /emote name/);
     assert.throws(() => normalizeDefinition({ name: "wave", path: "X" }), /object path/);
     assert.strictEqual(favoritePath("Animation/Human/Wave"), "Animation/Human/Wave");
+    assert.strictEqual(suggestedAlias("/Game/Pawn/Student/Abilities/PartialBody/Waving/ABL_Waving.ABL_Waving_C"), "waving");
 
     const writes: unknown[] = [];
     const rows: HmpEmoteAliasRecord[] = [{
@@ -35,7 +36,7 @@ async function run(): Promise<void> {
         },
     };
     const config = {
-        command: "emote", enabled: true, browseUnaliased: false, maxFavorites: 2, maxAliases: 10,
+        command: "emote", enabled: true, allowAll: false, maxFavorites: 2, maxAliases: 10,
         editorGroups: [{ key: "admin", minimumGrade: 1 }], ui: { url: "http://resources/hmp-emotes/dist/menu.html" },
         aliases: {
             apple: "/Game/Apple.Apple",
@@ -60,6 +61,16 @@ async function run(): Promise<void> {
     assert.strictEqual(writes.length, 1);
     assert.strictEqual(await service.aliases.clearPath(player, "/Game/Wave.Wave_C"), 1);
     assert.strictEqual(service.emotes.get("wave"), null);
+
+    const allowed = await service.aliases.allow(player, {
+        path: "/Game/Pawn/Student/Abilities/PartialBody/Waving/ABL_Waving.ABL_Waving_C",
+        kind: "ability",
+        channel: "PartialBody",
+    });
+    assert.strictEqual(allowed.name, "waving");
+    assert.strictEqual(service.emotes.get("waving")?.path, allowed.path);
+    assert.strictEqual(await service.aliases.deny(player, allowed.path), 1);
+    assert.strictEqual(service.emotes.get("waving"), null);
 
     assert.deepStrictEqual(await service.favorites.toggle(player, "Animation/Human/Wave"), ["Animation/Human/Wave"]);
     assert.deepStrictEqual(metadata.get(FAVORITES_KEY), ["Animation/Human/Wave"]);

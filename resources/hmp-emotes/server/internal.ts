@@ -5,7 +5,9 @@ import type { HmpEmoteAliasRecord, HmpEmoteDefinition, HmpEmotePlayer, HmpEmotes
 export interface EmoteConfig {
     command: string;
     enabled: boolean;
-    browseUnaliased: boolean;
+    allowAll: boolean;
+    /** Pre-0.1 compatibility name; normalized into allowAll. */
+    browseUnaliased?: boolean;
     maxFavorites: number;
     maxAliases: number;
     editorGroups: Array<{ key: string; minimumGrade?: number }>;

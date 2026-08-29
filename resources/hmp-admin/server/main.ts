@@ -31,7 +31,7 @@ const admin = createAdminService({
     listPlayers: () => PlayerManager.getAll(),
     getPlayer: (id) => PlayerManager.getById(id) || PlayerManager.getAll().find((player) => player.id === id) || null,
 });
-const adminUi = createAdminUi({ admin, ui, banking });
+const adminUi = createAdminUi({ admin, ui, banking, inventory });
 
 for (const name of ["permissions", "players", "actions", "moderation", "audit", "status"] as const) Exports.register(name, admin[name]);
 Exports.register("ui", adminUi);
@@ -52,10 +52,10 @@ Events.on("resourceStop", (name?: string) => {
     if (!name || name === "hmp-admin") admin.stop().catch((error: unknown) => logger.error(`Shutdown failed: ${messageOf(error)}`));
 });
 
-admin.ready()
-    .then(() => {
-        if (config.bootstrapSecret) logger.warn("Closed-test bootstrap access is enabled. Remove HMP_ADMIN_BOOTSTRAP_SECRET after verified staff identities are available.");
-        if (config.allowUnsafeAssertedBans) logger.warn("Unsafe asserted-identity bans are enabled. This must not be used in production.");
-        logger.info("Moderation, administration, recovery, and audit services ready");
-    })
-    .catch((error: unknown) => logger.error(`Startup failed: ${messageOf(error)}`));
+Events.on("resourceStart", async (name?: string) => {
+    if (name && name !== "hmp-admin") return;
+    await admin.ready();
+    if (config.bootstrapSecret) logger.warn("Closed-test bootstrap access is enabled. Remove HMP_ADMIN_BOOTSTRAP_SECRET after verified staff identities are available.");
+    if (config.allowUnsafeAssertedBans) logger.warn("Unsafe asserted-identity bans are enabled. This must not be used in production.");
+    logger.info("Moderation, administration, recovery, and audit services ready");
+});

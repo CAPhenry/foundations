@@ -13,6 +13,7 @@ import type {
 
 const { clean, normalizeNotification, normalizeAlert, normalizeInput, normalizeContext, normalizeProgress } = normalizeModule;
 type RequestKind = "alert" | "input" | "context" | "progress";
+const MAX_REQUEST_BYTES = 16 * 1024;
 
 interface PendingRequest {
     id: string;
@@ -118,6 +119,10 @@ function createUiService<P extends HmpUiPlayer>(options: { logger: Logger; now?:
         const owner = playerId(player);
         const id = `hmpui:${owner}:${now().toString(36)}:${(++sequence).toString(36)}`;
         const timeoutMs = Number(payload.timeoutMs) || 300000;
+        const envelope = JSON.stringify({ id, type, payload });
+        if (Buffer.byteLength(envelope, "utf8") > MAX_REQUEST_BYTES) {
+            throw new RangeError(`hmp-ui ${type} request exceeds the ${MAX_REQUEST_BYTES}-byte safe event payload`);
+        }
         return new Promise<T>((resolve, reject) => {
             const record: PendingRequest = {
                 id,
@@ -133,7 +138,7 @@ function createUiService<P extends HmpUiPlayer>(options: { logger: Logger; now?:
             };
             record.timer.unref?.();
             track(record);
-            try { player.emit("hmp-ui:request", JSON.stringify({ id, type, payload })); }
+            try { player.emit("hmp-ui:request", envelope); }
             catch (error) { forget(record); reject(error); }
         });
     }

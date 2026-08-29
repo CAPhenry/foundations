@@ -39,7 +39,14 @@ assert.strictEqual(typeof exportsSeen.get("status"), "function");
 for (const name of expected.slice(1)) assert.strictEqual(typeof exportsSeen.get(name), "object");
 assert.ok(handlers.has("playerConnect"));
 assert.ok(handlers.has("playerDisconnect"));
+assert.ok(handlers.has("resourceStart"));
 assert.ok(handlers.has("resourceStop"));
 const clientSource = fs.readFileSync(path.resolve(__dirname, "..", "dist", "client.js"), "utf8");
 assert.ok(clientSource.includes("client dependency shim ready"));
-console.log("hmp-core bundle contract passed");
+void (async () => {
+    let kickReason = "";
+    handlers.get("playerConnect")({ id: 7, nickname: "Not Ready", hardwareId: "123", kick: (reason) => { kickReason = reason; } });
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.match(kickReason, /temporarily unavailable/i);
+    console.log("hmp-core bundle contract passed");
+})().catch((error) => { console.error(error); process.exitCode = 1; });

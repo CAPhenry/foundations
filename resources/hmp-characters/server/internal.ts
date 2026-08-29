@@ -9,7 +9,6 @@ export interface CharacterConfig extends Record<string, unknown> {
     allowDelete: boolean;
     allowCloseWithActiveCharacter: boolean;
     command: string;
-    appearancePollMs: number;
     appearanceTimeoutMs: number;
     title: string;
     subtitle: string;
@@ -24,7 +23,6 @@ export interface CharacterFlowOptions {
     events?: CharacterEvents | null;
     logger?: Pick<HmpLogger, "warn" | "error">;
     config?: Partial<CharacterConfig>;
-    sleep?: (milliseconds: number) => Promise<void>;
 }
 
 export interface CharacterEventPayload {

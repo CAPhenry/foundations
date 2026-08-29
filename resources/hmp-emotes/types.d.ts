@@ -18,6 +18,8 @@ export interface HmpEmoteDefinition {
     resource?: string;
 }
 
+export type HmpEmoteCandidate = Pick<HmpEmoteDefinition, "path" | "kind" | "channel">;
+
 export interface HmpEmoteAliasRecord extends HmpEmoteDefinition {
     source: "config" | "resource" | "database";
     hidden?: boolean;
@@ -38,6 +40,10 @@ export interface HmpEmoteAliasesApi<P = HmpEmotePlayer> {
     list(): HmpEmoteAliasRecord[];
     get(name: string): HmpEmoteAliasRecord | null;
     set(actor: P, definition: HmpEmoteDefinition): Promise<HmpEmoteAliasRecord>;
+    /** Allow a discovered asset using a stable generated command alias. */
+    allow(actor: P, definition: HmpEmoteCandidate): Promise<HmpEmoteAliasRecord>;
+    /** Remove every server alias for a discovered asset. */
+    deny(actor: P, path: string): Promise<number>;
     hide(actor: P, name: string): Promise<boolean>;
     clearPath(actor: P, path: string): Promise<number>;
 }

@@ -33,7 +33,10 @@ function loadedPlayer(payload: unknown): Player | null {
 Events.on("hmp:character:loaded", (payload: unknown) => { const player = loadedPlayer(payload); if (player) void houses.characterLoaded(player); });
 Events.on("hmp:character:unloaded", (payload: unknown) => {
     const player = loadedPlayer(payload);
-    if (player) { player.house = "Unaffiliated"; houses.disconnect(player); }
+    if (!player) return;
+    try { player.house = "Unaffiliated"; }
+    catch (error) { logger.debug(`Skipped native house reset for #${player.id}: ${messageOf(error)}`); }
+    houses.disconnect(player);
 });
 Events.on("playerDisconnect", (player: Player) => houses.disconnect(player));
 Events.on("resourceStop", (name?: string) => {
@@ -99,6 +102,8 @@ if (config.enableCommands) Events.on("chatCommand", (player: Player, _message: u
     })().catch((error) => { logger.warn(`House command failed: ${messageOf(error)}`); reply(messageOf(error)); });
 });
 
-houses.start()
-    .then(() => logger.info("Character houses, native synchronization and House Cup ledger ready"))
-    .catch((error) => logger.error(`Startup failed: ${messageOf(error)}`));
+Events.on("resourceStart", async (name?: string) => {
+    if (name && name !== "hmp-houses") return;
+    await houses.start();
+    logger.info("Character houses, native synchronization and House Cup ledger ready");
+});

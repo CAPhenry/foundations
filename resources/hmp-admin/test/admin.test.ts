@@ -2,11 +2,30 @@ import assert = require("node:assert");
 import { test } from "node:test";
 import permissionsModule = require("../server/permissions");
 import serviceModule = require("../server/service");
+import uiModule = require("../server/ui");
 import type { HmpAdminAuditEntry, HmpAdminBan, HmpAdminWarning } from "../types";
 import type { AdminConfig, AdminRepository, Player } from "../server/internal";
 
 const { createPermissions } = permissionsModule;
 const { createAdminService } = serviceModule;
+const { inventoryOptions } = uiModule;
+
+test("builds searchable administration choices from canonical inventory definitions", () => {
+    const inventory = {
+        items: {
+            list: () => [
+                { name: "sealed_letter", label: "Sealed Letter", category: "Documents", resource: "test" },
+                { name: "native:broomhouse", aliases: ["native:house_broom"], label: "Broom House", nativeId: "BroomHouse", native: true, category: "Broom", holder: "BroomStorage", resource: "hmp-inventory" },
+            ],
+        },
+    } as never;
+    const options = inventoryOptions(inventory);
+    assert.deepStrictEqual(options[0], { label: "Broom House · BroomHouse", value: "native:broomhouse", description: "Native · Broom · BroomStorage" });
+    assert.strictEqual(options[1].value, "sealed_letter");
+    assert.deepStrictEqual(inventoryOptions(inventory, "BroomHouse"), [options[0]]);
+    assert.deepStrictEqual(inventoryOptions(inventory, "house_broom"), [options[0]]);
+    assert.deepStrictEqual(inventoryOptions(inventory, "documents sealed"), [options[1]]);
+});
 
 function setup() {
     let nextAudit = 1;

@@ -29,6 +29,9 @@ Events.on("hmp:session:ready", (session: unknown) => {
     flow.onSessionReady(value).catch((error: unknown) => flow.notifyError(value.player, error));
 });
 Events.on("hmp:character:loading", (payload: unknown) => flow.applyAppearance(payload as CharacterEventPayload));
+Events.on("playerAppearanceChanged", (player: unknown, blob: unknown, revision: unknown) => {
+    flow.onAppearanceChanged(player as Player, blob, revision).catch((error: unknown) => flow.notifyError(player as Player, error));
+});
 Events.on("worldReady", (player: unknown) => flow.onWorldReady(player as Player).catch((error: unknown) => flow.notifyError(player as Player, error)));
 Events.on("playerDisconnect", (player: unknown) => flow.disconnect(player as Player));
 

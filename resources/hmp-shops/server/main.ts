@@ -29,6 +29,8 @@ Events.on("resourceStop", (name?: string) => {
     shops.removeForResource(name);
 });
 
-shops.start()
-    .then(() => logger.info("Shop registry, stock and transaction ledger ready"))
-    .catch((error) => logger.error(`Startup failed: ${messageOf(error)}`));
+Events.on("resourceStart", async (name?: string) => {
+    if (name && name !== "hmp-shops") return;
+    await shops.start();
+    logger.info("Shop registry, stock and transaction ledger ready");
+});

@@ -7,6 +7,8 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
 
 ### Added
 
+- `hmp-world` for configurable server-wide weather, clock, date, season, native mount-boundary,
+  ambient-population and enemy-encounter baselines with synchronized runtime overrides.
 - `hmp-progression` for character-scoped XP and native-confirmed levels, replay-safe reward references,
   canonical talent points, durable managed talents, native purchase gating, and reconnect reconciliation.
 - `hmp-audio` for owner-scoped server and client Wwise playback, fixed-point/player/private/audience/global
@@ -30,12 +32,27 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
 
 ### Changed
 
+- Restyled the shared `hmp-ui` renderer around the Arcanum visual system and replaced invisible native
+  CEF select popups with keyboard-accessible, fully composited DOM dropdowns. Chained server menus now
+  retain their backdrop and focus lease across short request handoffs instead of flashing the world.
+  Large select catalogs can opt into client-side search.
+- `hmp-admin` inventory corrections now use server-side catalog search followed by a bounded searchable
+  picker of registered custom and native items, including friendly labels, native IDs, categories, and
+  holders. This avoids truncated client events with the 1,848-item catalog. `hmp-inventory` also accepts
+  raw native item IDs case-insensitively for compatibility with the original Framework commands.
+- `hmp-ui` now rejects requests above a conservative safe event-payload budget before transmission and
+  caps select choices, preventing malformed truncated JSON from reaching clients.
+- `hmp-emotes` now exposes the full-catalog policy as `allowAll` and gives authorized emote editors a
+  one-click server allow/remove checkbox beside each favorite star. Allowed rows receive stable generated
+  command aliases that can be created or renamed from the directly clickable Server alias column.
 - Reworked the release installation documentation around a no-tooling server-owner path, with explicit
   MySQL/MariaDB and Docker setup, working-directory/layout examples, first-boot checks, and troubleshooting.
 - Added parallel Windows and Linux dedicated-server instructions, including native paths, shell
   environment setup, filesystem permissions, systemd configuration, and Linux-specific troubleshooting.
 - `hmp-characters` now uses the original HogwartsMP wardrobe-style selector, progressively renders
   saved looks through the Framework `Portrait` API, caches matching appearances, and falls back to initials.
+- `hmp-characters` now persists new looks from the revisioned post-normalization appearance event,
+  preventing portrait cards from capturing an intermediate creator model.
 - `hmp-pvp` now owns a configurable server-wide lethal mode, staff commands, late-join targeting/team
   fan-out, a public mode API/event, and full native arbitration for otherwise-undecided hits. `hmp-duels`
   remains higher-priority and non-lethal, then restores the active global presentation after teardown.
@@ -80,5 +97,5 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
 - The initial admin resource focuses on moderation and corrective operations; spectate, noclip, and
   god mode are not included.
 
-[Unreleased]: https://github.com/Kheartz/hogwarts-mp-foundations/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/Kheartz/hogwarts-mp-foundations/releases/tag/v0.1.0
+[Unreleased]: https://github.com/hogwarts-mp/foundations/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/hogwarts-mp/foundations/releases/tag/v0.1.0

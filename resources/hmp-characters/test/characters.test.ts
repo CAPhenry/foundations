@@ -39,6 +39,7 @@ function setup(config: TestConfig = {}) {
         nickname: "Poppy Sweeting",
         position: { x: 0, y: 0, z: 0 },
         appearance: "before",
+        appearanceRevision: 2,
         transmog: "",
         appearanceOrder: [],
         emit(name: string, payload?: unknown) { clientEvents.push({ name, payload: JSON.parse(typeof payload === "string" ? payload : "{}") as Record<string, unknown> }); },
@@ -112,12 +113,10 @@ function setup(config: TestConfig = {}) {
         core,
         events,
         logger: { warn: () => true, error: () => true },
-        sleep: async () => {},
         config: {
             autoOpenOnJoin: true,
             allowDelete: true,
             allowCloseWithActiveCharacter: true,
-            appearancePollMs: 50,
             appearanceTimeoutMs: 500,
             ...config,
         },
@@ -164,8 +163,12 @@ test("creates a character with the post-creator appearance and selects it", asyn
     assert.strictEqual(flow.pending(player), true);
     assert.ok(clientEvents.some((event) => event.name === "hmp-characters:create"));
 
-    player.appearance = "after";
-    const character = await flow.confirmCreate(player, { first: " Poppy ", last: " Sweeting<script> " });
+    player.appearance = "intermediate";
+    assert.strictEqual(await flow.confirmCreate(player, { first: " Poppy ", last: " Sweeting<script> " }), true);
+    assert.strictEqual(await flow.onAppearanceChanged(player, "intermediate", 2), null);
+    assert.strictEqual(characters.length, 0);
+
+    const character = await flow.onAppearanceChanged(player, "after", 3);
     assert.ok(character);
     assert.strictEqual(character.name, "Poppy Sweetingscript");
     assert.strictEqual(characters.length, 1);

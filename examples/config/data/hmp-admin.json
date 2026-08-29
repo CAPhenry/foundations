@@ -13,7 +13,8 @@
         "admin.kick",
         "admin.teleport",
         "admin.freeze",
-        "admin.warn"
+        "admin.warn",
+        "admin.announce"
       ]
     },
     {
@@ -24,7 +25,8 @@
         "admin.jobs",
         "admin.inventory",
         "admin.banking",
-        "admin.audit"
+        "admin.audit",
+        "admin.environment"
       ]
     },
     {

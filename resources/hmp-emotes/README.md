@@ -30,9 +30,24 @@ an object containing `path`, `kind`, and `channel`:
 }
 ```
 
-Normal players see only named aliases by default. Members of an `editorGroups` entry see the complete
-11,361-entry candidate catalog and may right-click a row to name or clear it. Set `browseUnaliased` to
-true if every player should receive the raw discovery browser.
+Normal players see only server-allowed rows by default. Members of an `editorGroups` entry see the
+complete 11,361-entry candidate catalog and can check or uncheck the server-allowed box beside each
+favorite star. Allowing a row generates a stable command alias; right-click remains available when an
+editor wants to rename that alias. The **Server alias** cell is also directly clickable: entering a name
+creates or renames the shared `/e <name>` command, and clearing it removes that row from curated mode.
+Set `allowAll` to `true` if every player should receive and use the
+complete discovery browser instead:
+
+```json
+{
+  "allowAll": true
+}
+```
+
+Temporary `hmp-admin` bootstrap access is intentionally not a durable `hmp-core` group. To use emote
+curation during closed testing, assign yourself an `editorGroups` group such as account group `admin`
+grade 1 from the admin menu. With `allowAll` enabled, every row is policy-allowed and the per-row
+curation boxes are read-only until the server returns to curated mode.
 
 Alias precedence is deterministic:
 
@@ -46,7 +61,8 @@ under the `hmp-emotes:favorites` core metadata key and capped to keep event payl
 limit.
 
 Environment overrides are `HMP_EMOTES_CONFIG`, `HMP_EMOTES_COMMAND`, `HMP_EMOTES_ENABLED`,
-`HMP_EMOTES_BROWSE_UNALIASED`, and `HMP_EMOTES_UI_URL`.
+`HMP_EMOTES_ALLOW_ALL`, and `HMP_EMOTES_UI_URL`. `HMP_EMOTES_BROWSE_UNALIASED` and the equivalent
+configuration property remain accepted as compatibility names for `allowAll`.
 
 ## Commands
 
@@ -59,7 +75,7 @@ Environment overrides are `HMP_EMOTES_CONFIG`, `HMP_EMOTES_COMMAND`, `HMP_EMOTES
 ## Server API
 
 - `emotes.list/get/play/stop`
-- `aliases.register/unregister/list/get/set/hide/clearPath`
+- `aliases.register/unregister/list/get/set/allow/deny/hide/clearPath`
 - `favorites.list/toggle`
 - `ui.open/close/sync`
 - `status()`

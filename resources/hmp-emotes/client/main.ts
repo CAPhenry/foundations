@@ -143,6 +143,11 @@ function wire(): void {
     });
     Web.on(view, "place", (raw: unknown) => { const row = rowOf(raw); if (row) placeStart(row); });
     Web.on(view, "favToggle", (raw: unknown) => { const path = String(parse(raw).path || ""); if (path) server("hmp-emotes:favorite-toggle", { path }); });
+    Web.on(view, "allowToggle", (raw: unknown) => {
+        const row = rowOf(raw);
+        if (!row) return;
+        server("hmp-emotes:allow-toggle", { ...row, allowed: parse(raw).allowed === true });
+    });
     Web.on(view, "aliasSet", (raw: unknown) => {
         const row = rowOf(raw);
         if (!row) return;
@@ -245,6 +250,7 @@ Events.on("hmp-emotes:aliases", (raw: unknown) => {
     if (view >= 0) Web.emit(view, "em:aliases", {
         aliases: value.aliases || {},
         ...(typeof value.canEdit === "boolean" ? { canEdit: value.canEdit } : {}),
+        ...(typeof value.allowAll === "boolean" ? { allowAll: value.allowAll } : {}),
         ...(typeof value.browseUnaliased === "boolean" ? { browseUnaliased: value.browseUnaliased } : {}),
     });
 });

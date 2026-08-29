@@ -36,6 +36,7 @@ global.Imports = {
 };
 global.Events = { on: (name, handler) => handlers.set(name, handler) };
 global.PlayerManager = { getAll: () => [], getById: () => null };
+delete process.env.HMP_ADMIN_BOOTSTRAP_SECRET;
 
 require(path.resolve(__dirname, "..", "dist", "server.js"));
 
@@ -44,6 +45,11 @@ assert.ok(handlers.has("hmp:session:ready"));
 assert.ok(handlers.has("playerDisconnect"));
 assert.ok(handlers.has("playerTeleportComplete"));
 assert.ok(handlers.has("chatCommand"));
+assert.ok(handlers.has("resourceStart"));
 assert.ok(handlers.has("resourceStop"));
-assert.strictEqual(exportsSeen.get("status")().bootstrapEnabled, false);
-console.log("hmp-admin bundle contract passed");
+void (async () => {
+    await handlers.get("resourceStart")("hmp-admin");
+    assert.strictEqual(exportsSeen.get("status")().state, "ready");
+    assert.strictEqual(exportsSeen.get("status")().bootstrapEnabled, false);
+    console.log("hmp-admin bundle contract passed");
+})().catch((error) => { console.error(error); process.exitCode = 1; });

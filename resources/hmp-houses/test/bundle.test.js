@@ -37,4 +37,10 @@ assert.ok(handlers.has("hmp:character:loaded"));
 assert.ok(handlers.has("hmp:character:unloaded"));
 assert.ok(handlers.has("playerDisconnect"));
 assert.ok(handlers.has("resourceStop"));
+
+const disconnectedPlayer = { id: 2, nickname: "Gone" };
+Object.defineProperty(disconnectedPlayer, "house", {
+    set() { throw new Error("Player is not connected"); },
+});
+assert.doesNotThrow(() => handlers.get("hmp:character:unloaded")({ session: { player: disconnectedPlayer } }));
 console.log("hmp-houses bundle contract passed");

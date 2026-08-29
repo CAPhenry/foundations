@@ -1,7 +1,7 @@
 # Install HMP Foundation
 
 This guide is for a server owner installing the complete Foundation pack. Foundation is one versioned
-unit: install all twenty-two `hmp-*` resources from the same release and upgrade them together.
+unit: install all twenty-three `hmp-*` resources from the same release and upgrade them together.
 
 ## Before you begin
 
@@ -57,7 +57,7 @@ The result must look like this:
 ```
 
 Do not leave an extra nesting level such as
-`<server-root>/resources/hmp-foundation/resources/hmp-core`. There should be exactly twenty-two
+`<server-root>/resources/hmp-foundation/resources/hmp-core`. There should be exactly twenty-three
 top-level `hmp-*` directories.
 
 On Linux, resource and configuration names are case-sensitive. Preserve names such as `hmp-core`
@@ -211,15 +211,16 @@ the supported order:
 13. `hmp-interact`
 14. `hmp-activities`
 15. `hmp-doors`
-16. `hmp-emotes`
-17. `hmp-shops`
-18. `hmp-progression`
-19. `hmp-spells`
-20. `hmp-duels`
-21. `hmp-jobs`
-22. `hmp-admin`
+16. `hmp-world`
+17. `hmp-emotes`
+18. `hmp-shops`
+19. `hmp-progression`
+20. `hmp-spells`
+21. `hmp-duels`
+22. `hmp-jobs`
+23. `hmp-admin`
 
-If a server wrapper has a manual resource allowlist, include all twenty-two names and preserve this
+If a server wrapper has a manual resource allowlist, include all twenty-three names and preserve this
 order. `hmp-banking` and `hmp-interact` are independent peers at the same priority; their relative
 order is not significant.
 
@@ -241,6 +242,8 @@ Use a disposable test account first:
 - connect, create a character with `/characters`, select it, and reach the configured spawn;
 - reconnect and confirm the same character is available;
 - open `/inventory` and confirm native and configured custom items appear;
+- confirm `hmp-world` applies the configured weather/time and that Hogsmeade flight matches
+  `removeBoundaryVolumes`;
 - run `/progression status` after selecting the character;
 - open `/admin` as a normal player and confirm access is denied or the bootstrap prompt appears;
 - enter the bootstrap secret only through the masked admin prompt and confirm the intended staff tools;
@@ -262,7 +265,7 @@ Use [CLOSED_TESTING.md](CLOSED_TESTING.md) for the full functional test pass.
 | `progression`, `spellupgrades` | Do not load with `hmp-progression`; Foundation owns durable XP, talent points, and managed talents. |
 | `duels`, `pvp` | Do not load with `hmp-duels`/`hmp-pvp`; port gamemode policy into the Foundation APIs. |
 | `blips-dev`, `spellupgrades`, other probes | Keep diagnostic probes out of production. |
-| `gamemode` | May remain only when its non-overlapping chat/environment features are intentionally wanted. |
+| `gamemode` | May remain for chat and admin commands when it delegates environment policy to `hmp-world`; remove any older build that calls `World.setBoundaryPolicy` directly. |
 
 ## Troubleshooting
 
@@ -291,7 +294,7 @@ Never post passwords, connection URLs, bootstrap secrets, player IPs, or identit
 1. Stop the server and prevent player connections.
 2. Back up the Foundation database and `<server-root>/data/hmp-*.json`.
 3. Read [CHANGELOG.md](CHANGELOG.md) and compare the new `examples/config` files with local settings.
-4. Replace all twenty-two `hmp-*` directories together; do not merge old and new `dist` directories.
+4. Replace all twenty-three `hmp-*` directories together; do not merge old and new `dist` directories.
 5. Start the server and let every migration and resource reach ready state before admitting players.
 6. Restart clients after changing client-bearing resources.
 

@@ -7,6 +7,12 @@ unfocused. Dialogs and cancellable progress acquire focus through `Web.focusView
 owner-scoped `hmp-lib` control lease until the dialog closes. A resource reload therefore cannot
 leave an orphaned UI lock behind.
 
+The bundled renderer uses Arcanum as its default visual language. Select fields are rendered as DOM
+menus rather than native browser popups because off-screen CEF does not composite native dropdown
+windows. Server owners can replace the client renderer while retaining the same normalized UI API.
+Chained dialogs reuse the focused view for a short handoff window, keeping the dimmed backdrop
+continuous while a server resource prepares the next menu.
+
 It depends only on `hmp-lib`. Character, inventory and other domain screens remain resource-owned.
 
 ## Server usage
@@ -42,6 +48,29 @@ const values = await UI.input(player, {
 });
 
 if (values) console.log(values.price, values.note);
+```
+
+Pre-filtered catalogs can use the same select contract with client-side search. A dialog accepts at most
+32 options per select, and the complete request must remain below the safe event-payload budget. Resources
+with larger catalogs should first collect a server-side search term, then offer the matching subset. The
+submitted value must still be one of the exact options supplied and is revalidated on the server:
+
+```js
+const values = await UI.input(player, {
+    title: "Give item",
+    fields: [{
+        name: "item",
+        label: "Item",
+        type: "select",
+        searchable: true,
+        required: true,
+        options: matchingItems.slice(0, 32).map((item) => ({
+            label: item.label,
+            value: item.name,
+            description: item.category,
+        })),
+    }],
+});
 ```
 
 Context menus return only an offered option ID. The server revalidates the response against the exact request, rejecting invented and disabled options:

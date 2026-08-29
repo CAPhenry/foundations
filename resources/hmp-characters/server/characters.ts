@@ -8,7 +8,12 @@ import type {
     Player,
 } from "./internal";
 
-interface PendingCreation { before: string; confirming: boolean }
+interface PendingCreation {
+    confirming: boolean;
+    name?: string;
+    revision?: number;
+    timer?: ReturnType<typeof setTimeout>;
+}
 
 const MAX_LOOK_BYTES = 60_000;
 
@@ -42,7 +47,6 @@ function createCharacterFlow(options: CharacterFlowOptions) {
     const events = options.events || null;
     const logger = options.logger || console;
     const config = options.config || {};
-    const sleep = options.sleep || ((milliseconds: number) => new Promise<void>((resolve) => setTimeout(resolve, milliseconds)));
     if (!core?.sessions || !core?.characters || !core?.metadata) throw new TypeError("hmp-core API is required");
 
     const worldReady = new Set<number>();
@@ -63,6 +67,14 @@ function createCharacterFlow(options: CharacterFlowOptions) {
         const message = error instanceof Error ? error.message : String(error);
         send(player, "hmp-characters:error", { message });
         if (logger && typeof logger.warn === "function") logger.warn(`Character action for #${playerId(player)} failed: ${message}`);
+    }
+
+    function clearPending(player: Player): PendingCreation | null {
+        const id = playerId(player);
+        const pending = pendingCreation.get(id) || null;
+        if (pending?.timer) clearTimeout(pending.timer);
+        pendingCreation.delete(id);
+        return pending;
     }
 
     async function askMaySwitch(player: Player, character: HmpCoreCharacter): Promise<void> {
@@ -139,7 +151,7 @@ function createCharacterFlow(options: CharacterFlowOptions) {
     }
 
     function close(player: Player): boolean {
-        pendingCreation.delete(playerId(player));
+        clearPending(player);
         send(player, "hmp-characters:close");
         return true;
     }
@@ -182,10 +194,8 @@ function createCharacterFlow(options: CharacterFlowOptions) {
     async function beginCreate(player: Player): Promise<boolean> {
         const list = await core.characters.list(player);
         if (list.length >= core.characters.limit()) throw new Error("All character slots are already in use.");
-        let before = "";
-        try { before = String(player.getAppearanceBlob?.() || ""); }
-        catch (_) { before = ""; }
-        pendingCreation.set(playerId(player), { before, confirming: false });
+        clearPending(player);
+        pendingCreation.set(playerId(player), { confirming: false });
         send(player, "hmp-characters:create");
         return true;
     }
@@ -207,46 +217,47 @@ function createCharacterFlow(options: CharacterFlowOptions) {
         return (creatorName || fallback).slice(0, 80);
     }
 
-    async function readAppearance(player: Player, before: string): Promise<string> {
-        const started = Date.now();
-        let latest = "";
-        do {
-            try { latest = String(player.getAppearanceBlob?.() || ""); }
-            catch (_) { latest = ""; }
-            if (latest && latest !== before) return latest;
-            if (Date.now() - started >= Number(config.appearanceTimeoutMs || 6000)) return latest || before;
-            await sleep(Number(config.appearancePollMs || 200));
-        } while (connected(player));
-        return "";
-    }
-
-    async function confirmCreate(player: Player, input: CharacterNameInput): Promise<HmpCoreCharacter | null> {
+    async function confirmCreate(player: Player, input: CharacterNameInput): Promise<boolean> {
         const id = playerId(player);
         const pending = pendingCreation.get(id);
         if (!pending || pending.confirming) throw new Error("No character creation is pending.");
         pending.confirming = true;
+        pending.name = characterName(player, input);
+        pending.revision = Math.max(0, Math.trunc(Number(player.appearanceRevision)) || 0);
+        pending.timer = setTimeout(() => {
+            if (pendingCreation.get(id) !== pending) return;
+            pendingCreation.delete(id);
+            if (connected(player)) notifyError(player, new Error("Your look did not finish applying, so the character was not saved."));
+        }, Number(config.appearanceTimeoutMs || 6000));
+        return true;
+    }
+
+    async function onAppearanceChanged(player: Player, blob: unknown, revision: unknown): Promise<HmpCoreCharacter | null> {
+        const pending = pendingCreation.get(playerId(player));
+        const publishedRevision = Math.max(0, Math.trunc(Number(revision)) || 0);
+        if (!pending?.confirming || !pending.name || publishedRevision <= Number(pending.revision || 0)) return null;
+        const appearance = String(blob || "");
+        if (!appearance) return null;
+        clearPending(player);
         try {
-            const appearance = await readAppearance(player, pending.before);
             if (!connected(player)) return null;
-            const character = await core.characters.create(player, { name: characterName(player, input) });
-            if (appearance) await core.metadata.setCharacter(character.id, "appearance", appearance);
+            const character = await core.characters.create(player, { name: pending.name });
+            await core.metadata.setCharacter(character.id, "appearance", appearance);
             let transmog = "";
             try { transmog = String(player.getTransmog?.() || ""); }
             catch (_) { transmog = ""; }
             if (transmog) await core.metadata.setCharacter(character.id, "transmog", transmog);
-            pendingCreation.delete(id);
             await select(player, character.id);
             send(player, "hmp-characters:saved", { character: { id: character.id, slot: character.slot, name: character.name } });
             return character;
         } catch (error) {
-            pendingCreation.delete(id);
             if (connected(player)) await open(player, { mode: core.characters.active(player) ? "wardrobe" : "join", autoCreate: false });
             throw error;
         }
     }
 
     async function cancelCreate(player: Player): Promise<HmpCharacterUiModel> {
-        pendingCreation.delete(playerId(player));
+        clearPending(player);
         return open(player, { mode: core.characters.active(player) ? "wardrobe" : "join", autoCreate: false });
     }
 
@@ -280,7 +291,7 @@ function createCharacterFlow(options: CharacterFlowOptions) {
         worldReady.delete(id);
         clientReady.delete(id);
         initialOpened.delete(id);
-        pendingCreation.delete(id);
+        clearPending(player);
     }
 
     return Object.freeze({
@@ -289,6 +300,7 @@ function createCharacterFlow(options: CharacterFlowOptions) {
         select,
         beginCreate,
         confirmCreate,
+        onAppearanceChanged,
         cancelCreate,
         remove,
         applyAppearance,

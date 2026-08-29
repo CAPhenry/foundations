@@ -128,6 +128,8 @@ test("builds native definitions from InventoryCatalog while preserving curated a
     registry.register(items[2]);
     assert.strictEqual(registry.get("native:galleons")?.name, "native:galleons");
     assert.strictEqual(registry.get("native:knuts")?.name, "native:galleons");
+    assert.strictEqual(registry.get("Knuts")?.name, "native:galleons");
+    assert.strictEqual(registry.get("KNUTS")?.name, "native:galleons");
     assert.strictEqual(registry.fromNative("Knuts")?.name, "native:galleons");
     assert.strictEqual(registry.list().length, 1);
     assert.throws(() => registry.register({ name: "native:knuts", nativeId: "OtherCurrency", resource: "test" }), /already an alias/);

@@ -19,11 +19,25 @@ created test transaction after its state has been inspected.
 ### Account, character, and spawn
 
 - Connect for the first time, create a character, reconnect, and select it again.
+- Confirm the saved character portrait matches the live character's face, hair, complexion, and other
+  creator features before and after reconnecting.
 - Create multiple characters, switch between them, and confirm inventory/location do not leak.
 - Choose a configured spawn, reconnect, and use the character's last location.
 - Travel between game areas and confirm a saved location from one area is not offered as a raw
   same-area teleport from another.
 - Report any selector that opens too early, cannot be closed correctly, or leaves controls locked.
+
+### World and environment
+
+- Confirm the configured weather, time, date, season, and time scale apply on server startup.
+- Fly into and over Hogsmeade with `removeBoundaryVolumes` enabled; native no-fly, height, speed, and
+  dismount volumes must not constrain the broom, including after streaming into a new area.
+- Temporarily preserve boundary volumes through the `hmp-world` API or server admin command, reload the
+  area, and confirm the native restriction returns; reset the policy and confirm the JSON baseline wins.
+- Confirm ambient students and native enemy encounters match the configured policy for every connected
+  client and after world travel.
+- Report environment changes that affect only one client, disappear on world travel, or survive a
+  server restart despite differing from the JSON baseline.
 
 ### Houses and House Cup
 
@@ -199,6 +213,8 @@ created test transaction after its state has been inspected.
 
 ### Administration
 
+- Open each form containing a dropdown, confirm every option is visibly rendered above the dialog,
+  and verify both mouse and arrow-key selection return the chosen value.
 - Locate the intended player using nickname, ID, account, character, and identity-trust details.
 - Warn, freeze/release, go to, bring, and kick a consenting test player.
 - Confirm go-to and bring reject players in different game areas rather than applying foreign-map

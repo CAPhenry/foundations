@@ -19,6 +19,7 @@ export interface HmpUiAlert {
 export interface HmpUiSelectOption {
     label: string;
     value: string;
+    description?: string;
 }
 
 export interface HmpUiInputField {
@@ -32,6 +33,8 @@ export interface HmpUiInputField {
     min?: number;
     max?: number;
     options?: HmpUiSelectOption[];
+    /** Adds client-side filtering for large option catalogs. */
+    searchable?: boolean;
 }
 
 export interface HmpUiInputDialog {

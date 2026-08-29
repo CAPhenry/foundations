@@ -118,7 +118,7 @@ The handler runs on the server. A consumable is removed only after the handler a
 
 ## Native items
 
-Every inventoryable definition exposed by the Framework's `InventoryCatalog` is mapped automatically. The common potions, combat plants and ingredients retain friendly aliases such as `native:wiggenweld_potion`; native currency is exposed as `native:galleons` with a bundled coin icon. The compatibility name `native:knuts` resolves to that same definition and underlying native count—it is not a second item. Other definitions use a stable `native:<lowercase ItemDefinition id>` name such as `native:back_001_common`. You can re-register a mapping from another resource to supply a better label or custom icon:
+Every inventoryable definition exposed by the Framework's `InventoryCatalog` is mapped automatically. The common potions, combat plants and ingredients retain friendly aliases such as `native:wiggenweld_potion`; native currency is exposed as `native:galleons` with a bundled coin icon. The compatibility name `native:knuts` resolves to that same definition and underlying native count—it is not a second item. Other definitions use a stable `native:<lowercase ItemDefinition id>` name such as `native:back_001_common`. Raw native IDs are also accepted case-insensitively as compatibility lookups, so `BroomHouse` and `native:broomhouse` resolve to the same registered item. You can re-register a mapping from another resource to supply a better label or custom icon:
 
 ```js
 hmpInventory.items.register({

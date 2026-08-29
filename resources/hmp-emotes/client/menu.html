@@ -5,9 +5,10 @@
   native -> page : em:focus {}
   native -> page : em:dump { text }
   page -> native : ready {} · play { path, alias } · preview { path, kind } · previewToggle { on }
-  native -> page : em:favs { paths } · em:aliases { aliases, canEdit }
+  native -> page : em:favs { paths } · em:aliases { aliases, canEdit, allowAll }
                  · previewTune { tune } · previewDump {} · place { path, alias, kind, channel }
-                 · favToggle { path } · aliasSet { path, alias, kind, channel }
+                 · favToggle { path } · allowToggle { path, allowed, kind, channel }
+                 · aliasSet { path, alias, kind, channel }
                  · stop {} · close {}
 -->
 <html>
@@ -86,12 +87,17 @@
       #count { font-size: 11px; color: var(--muted); padding: 10px 2px 6px; letter-spacing: 0.04em; }
       #count b { color: var(--accent); font-weight: 500; }
 
-      .head, .row { display: grid; grid-template-columns: 24px 1fr 92px; gap: 10px; align-items: center; }
+      .head, .row { display: grid; grid-template-columns: 24px 24px 1fr 92px; gap: 8px; align-items: center; }
       /* Sized and centred even when empty, so the path column can't shift between favourited rows. */
       .star { font-size: 15px; line-height: 1; text-align: center; cursor: pointer; user-select: none;
         color: #4d4636; }
       .star:hover { color: var(--bright); }
       .star.on { color: var(--accent); }
+      .allowed { font-size: 15px; line-height: 1; text-align: center; cursor: default; user-select: none;
+        color: #4d4636; }
+      .allowed.editable { cursor: pointer; }
+      .allowed.editable:hover { color: var(--bright); }
+      .allowed.on { color: #8fad72; }
       .head { font-family: var(--cinzel); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
         color: #7d7259; padding: 0 8px 6px; border-bottom: 1px solid var(--hair); }
 
@@ -119,6 +125,8 @@
       .alias.none { color: #4d4636; }
       /* Named by the server owner rather than shipped in the mod's registry. */
       .alias.mine { color: var(--bright); font-style: italic; }
+      .alias.editable { cursor: text; }
+      .alias.editable:hover { color: var(--bright); text-decoration: underline; text-decoration-color: rgba(201,162,90,.45); }
       .aliasedit { width: 100%; font-family: var(--cinzel); font-size: 11px; letter-spacing: 0.06em;
         color: var(--heading); background: var(--well); border: 1px solid rgba(201, 162, 90, 0.45);
         border-radius: 3px; padding: 1px 4px; outline: none; }
@@ -141,7 +149,8 @@
       <p class="hint">
         <kbd>&uarr;&darr;</kbd> browse &middot; <kbd>Enter</kbd> play &middot; <kbd>Esc</kbd> close.
         The figure beside the menu shows whatever row you are on, before you play it on yourself.
-        Named rows are named by this server; every row replicates either way.
+        Named rows are allowed by this server; editors can toggle the box beside the star and click
+        the Server alias column to set the shared <kbd>/e name</kbd>.
         <b class="lit">Brighter</b> rows are abilities &mdash; the game's own way of animating you, and the
         one kind the figure can't show.
       </p>
@@ -151,7 +160,7 @@
       </div>
       <input id="search" type="text" placeholder="Search path or alias&hellip;" autocomplete="off" spellcheck="false" />
       <div id="count"></div>
-      <div class="head"><div></div><div>Asset path</div><div>Alias</div></div>
+      <div class="head"><div title="Favourite">★</div><div title="Allowed by server">✓</div><div>Asset path</div><div>Server alias</div></div>
       <div id="list" class="arc-scroll"><div id="spacer"></div></div>
       <div id="status">Loading asset list&hellip;</div>
       <div id="tune" class="arc-scroll" hidden></div>
@@ -191,7 +200,7 @@
       // objectPath -> alias, from the server. Server-owned curation, so the page only proposes edits.
       let aliases = {};
       let canEdit = false;
-      let browseUnaliased = false;
+      let allowAll = false;
 
       // Stable, so everything keeps its existing order within the favourited and unfavourited halves.
       // Server-declared only: the mod ships no alias list any more.
@@ -278,7 +287,7 @@
       function filter() {
         term = search.value.trim().toLowerCase();
         // hay is precomputed, so a server alias has to be matched separately.
-        const available = (browseUnaliased || canEdit) ? all : all.filter((r) => !!aliasOf(r));
+        const available = (allowAll || canEdit) ? all : all.filter((r) => !!aliasOf(r));
         shown = favsFirst(term ? available.filter((r) => r.hay.includes(term) || aliasOf(r).toLowerCase().includes(term)) : available);
         sel = 0;
         spacer.style.height = shown.length * ROW + "px";
@@ -317,10 +326,13 @@
 
           const named = aliasOf(r);
           const a = document.createElement("div");
-          a.className = "alias" + (named ? " mine" : " none");
+          a.className = "alias" + (named ? " mine" : " none") + (canEdit ? " editable" : "");
           a.append(named ? label(named, term) : "—");
-          a.title = canEdit ? "Right-click to name this row" : "";
-          if (canEdit) a.addEventListener("contextmenu", (e) => { e.preventDefault(); editAlias(el, r, a); });
+          a.title = canEdit ? "Click to set the server-level /e alias" : named ? `Server alias: /e ${named}` : "";
+          if (canEdit) {
+            a.addEventListener("click", (e) => { e.stopPropagation(); editAlias(el, r, a); });
+            a.addEventListener("contextmenu", (e) => { e.preventDefault(); e.stopPropagation(); editAlias(el, r, a); });
+          }
 
           const star = document.createElement("div");
           star.className = "star" + (favs.has(r.path) ? " on" : "");
@@ -329,7 +341,22 @@
           // Stop the row's click, or favouriting would also play the row.
           star.addEventListener("click", (e) => { e.stopPropagation(); send("favToggle", { path: r.path }); });
 
-          el.append(star, p, a);
+          const allowed = document.createElement("div");
+          const isAllowed = allowAll || !!named;
+          allowed.className = "allowed" + (isAllowed ? " on" : "") + (canEdit && !allowAll ? " editable" : "");
+          allowed.textContent = isAllowed ? "☑" : "☐";
+          allowed.title = allowAll
+            ? "Allowed by the server-wide allowAll policy"
+            : named
+              ? `Allowed as /e ${named} · click to remove`
+              : canEdit ? "Click to allow this emote for the server" : "Not allowed by this server";
+          allowed.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (!canEdit || allowAll) return;
+            send("allowToggle", { path: objectPath(r), allowed: !named, kind: r.kind, channel: r.channel });
+          });
+
+          el.append(star, allowed, p, a);
           el.addEventListener("click", () => { sel = i; play(r); });
           if (canEdit) el.addEventListener("contextmenu", (e) => { e.preventDefault(); editAlias(el, r, a); });
           spacer.appendChild(el);
@@ -575,7 +602,8 @@
           if (path) aliases[path] = name;
         }
         if (typeof d.canEdit === "boolean") canEdit = d.canEdit;
-        if (typeof d.browseUnaliased === "boolean") browseUnaliased = d.browseUnaliased;
+        if (typeof d.allowAll === "boolean") allowAll = d.allowAll;
+        else if (typeof d.browseUnaliased === "boolean") allowAll = d.browseUnaliased;
         filter();
       });
 

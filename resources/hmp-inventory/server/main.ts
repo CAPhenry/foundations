@@ -90,7 +90,9 @@ Events.on("resourceStop", (name: unknown) => {
     resource.stop().catch((error: unknown) => logger.error(`Inventory shutdown failed: ${messageOf(error)}`));
 });
 
-resource.ready()
-    .then(() => logger.info(`Inventory ready with ${resource.status().itemDefinitions} item definition(s)`))
-    .catch((error: unknown) => logger.error(`Startup failed: ${messageOf(error)}`));
+Events.on("resourceStart", async (name: unknown) => {
+    if (name && name !== "hmp-inventory") return;
+    await resource.ready();
+    logger.info(`Inventory ready with ${resource.status().itemDefinitions} item definition(s)`);
+});
 // TypeScript source.
