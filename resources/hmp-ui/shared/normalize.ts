@@ -125,7 +125,7 @@ function normalizeMetadata(raw: unknown): HmpUiContextMetadata[] {
 
 function iconUrl(value: unknown): string | undefined {
     const url = clean(value, 400);
-    return /^https?:\/\//i.test(url) ? url : undefined;
+    return /^(?:https?|fw):\/\//i.test(url) ? url : undefined;
 }
 
 function normalizeContext(raw: HmpUiContextMenu): HmpUiContextMenu {

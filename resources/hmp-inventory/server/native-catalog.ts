@@ -33,7 +33,7 @@ const curated: CuratedNativeItem[] = [
 ].map(([name, label, itemId, itemType, holder, maxStack, icon, aliases]) => ({ name, label, itemId, itemType, holder, maxStack, icon, aliases })) as CuratedNativeItem[];
 
 const curatedById = new Map(curated.map((item) => [item.itemId, item]));
-const iconUrl = (file: string) => `http://resources/hmp-inventory/dist/icons/${file}`;
+const iconUrl = (file: string) => `fw://resources/hmp-inventory/dist/icons/${file}`;
 
 function prettify(value: string): string {
     return value

@@ -27,8 +27,8 @@ test("normalizes bounded plain-text UI contracts", () => {
     assert.strictEqual(catalog.options?.length, 32);
     assert.strictEqual(catalog.options?.[31].description, "Catalog row 31");
     assert.throws(() => normalizeContext({ title: "Bad", options: [{ id: "spaces are invalid", title: "No" }] }), /invalid/);
-    const icons = normalizeContext({ title: "Icons", options: [{ id: "safe", title: "Safe", icon: "http://resources/items/icon.svg" }, { id: "unsafe", title: "Unsafe", icon: "javascript:alert(1)" }] });
-    assert.strictEqual(icons.options[0].icon, "http://resources/items/icon.svg");
+    const icons = normalizeContext({ title: "Icons", options: [{ id: "safe", title: "Safe", icon: "fw://resources/items/icon.svg" }, { id: "unsafe", title: "Unsafe", icon: "javascript:alert(1)" }] });
+    assert.strictEqual(icons.options[0].icon, "fw://resources/items/icon.svg");
     assert.strictEqual(icons.options[1].icon, undefined);
     assert.strictEqual(normalizeProgress({ label: "Casting", duration: 999999 }).duration, 600000);
 });

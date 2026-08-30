@@ -29,7 +29,7 @@ Configure `hmp-mysql`, then optionally create `data/hmp-inventory.json`:
   "autoSaveMs": 30000,
   "allowInventoryCommand": true,
   "ui": {
-    "url": "http://resources/hmp-inventory/dist/index.html"
+    "url": "fw://resources/hmp-inventory/dist/index.html"
   },
   "items": []
 }
@@ -49,13 +49,13 @@ resource and set its resource URL in `data/hmp-inventory.json`:
 ```json
 {
   "ui": {
-    "url": "http://resources/my-inventory-ui/dist/index.html"
+    "url": "fw://resources/my-inventory-ui/dist/index.html"
   }
 }
 ```
 
 `HMP_INVENTORY_UI_URL` can provide the same override through the process environment. Local pages must
-use an `http://resources/...` URL; externally hosted pages must use HTTPS.
+use an `fw://resources/...` URL; externally hosted pages must use HTTPS.
 
 Replacement pages implement the versioned `hmp.inventory.ui/v1` bridge:
 
@@ -80,7 +80,7 @@ hmpInventory.items.register({
     name: "sealed_letter",
     label: "Sealed Letter",
     description: "Owl post with an unbroken Ministry seal.",
-    icon: "http://resources/my-resource/icons/sealed-letter.png",
+    icon: "fw://resources/my-resource/icons/sealed-letter.png",
     category: "Correspondence",
     weight: 0.05,
     maxStack: 20,
@@ -100,7 +100,7 @@ Metadata is part of a custom stack's identity. Two otherwise identical letters w
 hmpInventory.items.register({
     name: "healing_tonic",
     label: "Healing Tonic",
-    icon: "http://resources/my-resource/icons/tonic.png",
+    icon: "fw://resources/my-resource/icons/tonic.png",
     category: "Brews",
     weight: 0.3,
     maxStack: 6,
@@ -130,7 +130,7 @@ hmpInventory.items.register({
     category: "Brooms",
     maxStack: 1,
     unique: true,
-    icon: "http://resources/my-brooms/icons/custom-broom.png",
+    icon: "fw://resources/my-brooms/icons/custom-broom.png",
     resource: "my-brooms",
 });
 

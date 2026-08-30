@@ -1,6 +1,6 @@
 import type { HmpControlLease, HmpLibClient } from "../../hmp-lib/types";
 
-const DEFAULT_VIEW_URL = "http://resources/hmp-inventory/dist/index.html";
+const DEFAULT_VIEW_URL = "fw://resources/hmp-inventory/dist/index.html";
 const UI_CONTRACT = "hmp.inventory.ui/v1";
 const Input = Imports.get<HmpLibClient>("hmp-lib").input;
 let view = -1;
@@ -41,7 +41,7 @@ function configure(payload: unknown): void {
         return;
     }
     const nextUrl = String(configured.url || "").trim();
-    if (!nextUrl || (nextUrl !== DEFAULT_VIEW_URL && !nextUrl.startsWith("http://resources/") && !nextUrl.startsWith("https://"))) return;
+    if (!nextUrl || (nextUrl !== DEFAULT_VIEW_URL && !nextUrl.startsWith("fw://resources/") && !nextUrl.startsWith("https://"))) return;
     if (nextUrl === viewUrl) return;
     if (view >= 0) {
         try { Web.destroyView(view); } catch (_) {}

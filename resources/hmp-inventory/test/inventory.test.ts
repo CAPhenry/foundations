@@ -103,7 +103,7 @@ function setup() {
         autoSaveMs: 0,
         allowInventoryCommand: true,
         items: [],
-        ui: { url: "http://resources/hmp-inventory/dist/index.html" },
+        ui: { url: "fw://resources/hmp-inventory/dist/index.html" },
     };
     const service = createInventory({ repository, registry, native, core, events, config });
     const transfers = createTransferService({ repository, registry, core, events, config });
@@ -325,7 +325,7 @@ test("inventory UI opens through the public service without relying on flattened
     const configured = clientEvents.find((event) => event.name === "hmp-inventory:configure");
     assert.deepStrictEqual(JSON.parse(String(configured?.payload)), {
         contract: "hmp.inventory.ui/v1",
-        url: "http://resources/hmp-inventory/dist/index.html",
+        url: "fw://resources/hmp-inventory/dist/index.html",
     });
 });
 // Source-level TypeScript tests.

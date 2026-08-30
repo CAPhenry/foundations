@@ -121,7 +121,7 @@ export interface HmpItemDefinition<P = HmpInventoryPlayer> {
     aliases?: ReadonlyArray<string>;
     label?: string;
     description?: string;
-    /** Absolute URL or resource URL, such as http://resources/my-resource/icons/item.png. */
+    /** Absolute URL or resource URL, such as fw://resources/my-resource/icons/item.png. */
     icon?: string;
     category?: string;
     kind?: "item" | "gear" | "tool" | "mount";

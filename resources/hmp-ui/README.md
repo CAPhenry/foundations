@@ -83,7 +83,7 @@ const choice = await UI.context(player, {
             id: "brew",
             title: "Brew potion",
             description: "Uses the selected recipe.",
-            icon: "http://resources/my-potions/icons/cauldron.png",
+            icon: "fw://resources/my-potions/icons/cauldron.png",
         },
         { id: "collect", title: "Collect ingredients" },
     ],

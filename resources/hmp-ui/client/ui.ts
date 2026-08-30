@@ -62,7 +62,7 @@ function createUiClient(options: UiClientOptions): HmpUiClient & {
     stop(): void;
 } {
     const { web, events } = options;
-    const url = options.url || "http://resources/hmp-ui/dist/index.html";
+    const url = options.url || "fw://resources/hmp-ui/dist/index.html";
     const retryMs = options.retryMs ?? 1000;
     const maxRetries = options.maxRetries ?? 20;
     const transitionGraceMs = Math.max(0, Math.trunc(Number(options.transitionGraceMs ?? 160)) || 0);

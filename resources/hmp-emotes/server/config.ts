@@ -14,7 +14,7 @@ function loadConfig(Hmp: HmpLibServer<HmpEmotePlayer>, options: { env?: NodeJS.P
         maxFavorites: 300,
         maxAliases: 200,
         editorGroups: [{ key: "admin", minimumGrade: 1 }],
-        ui: { url: "http://resources/hmp-emotes/dist/menu.html" },
+        ui: { url: "fw://resources/hmp-emotes/dist/menu.html" },
         aliases: {
             popcorn: "/Game/Animation/Human/Stations/Sitting/STUF_STN_SIT_Bench_Eat_Box_v01_anm.STUF_STN_SIT_Bench_Eat_Box_v01_anm",
             apple: "/Game/Animation/Human/Stations/Sitting/HUF_STN_SIT_Bench_Idle_EatingApple_ANM.HUF_STN_SIT_Bench_Idle_EatingApple_ANM",
@@ -41,7 +41,7 @@ function loadConfig(Hmp: HmpLibServer<HmpEmotePlayer>, options: { env?: NodeJS.P
     });
     if (!loaded.ui || typeof loaded.ui !== "object") loaded.ui = { ...defaults.ui };
     loaded.ui.url = String(env.HMP_EMOTES_UI_URL || loaded.ui.url || defaults.ui.url).trim();
-    if (!loaded.ui.url.startsWith("http://resources/") && !loaded.ui.url.startsWith("https://")) throw new TypeError("hmp-emotes ui.url must be a resource URL or HTTPS URL");
+    if (!loaded.ui.url.startsWith("fw://resources/") && !loaded.ui.url.startsWith("https://")) throw new TypeError("hmp-emotes ui.url must be a resource URL or HTTPS URL");
     if (!loaded.aliases || typeof loaded.aliases !== "object" || Array.isArray(loaded.aliases)) throw new TypeError("hmp-emotes aliases must be an object");
     for (const [name, definition] of Object.entries(loaded.aliases)) normalizeConfigured(name, definition);
     return loaded;

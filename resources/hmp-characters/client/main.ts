@@ -1,7 +1,7 @@
 import type { HmpControlLease, HmpLibClient } from "../../hmp-lib/types";
 import type { HmpCharacterCard, HmpCharacterLook, HmpCharacterUiModel } from "../types";
 
-const VIEW_URL = "http://resources/hmp-characters/dist/index.html";
+const VIEW_URL = "fw://resources/hmp-characters/dist/index.html";
 const READY_TIMEOUT_MS = 8000;
 const PORTRAIT_PX = 96;
 const PORTRAIT_POLL_MS = 50;

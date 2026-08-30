@@ -79,12 +79,12 @@ require(path.resolve(__dirname, "..", "dist", "client.js"));
 assert.ok(clientHandlers.has("hmp-inventory:open"));
 assert.ok(clientHandlers.has("hmp-inventory:configure"));
 clientHandlers.get("hmp-inventory:open")(JSON.stringify({ items: [], container: {} }));
-assert.strictEqual(createdViewUrl, "http://resources/hmp-inventory/dist/index.html");
+assert.strictEqual(createdViewUrl, "fw://resources/hmp-inventory/dist/index.html");
 clientHandlers.get("hmp-inventory:configure")(JSON.stringify({
     contract: "hmp.inventory.ui/v1",
-    url: "http://resources/my-inventory-ui/dist/index.html",
+    url: "fw://resources/my-inventory-ui/dist/index.html",
 }));
-assert.strictEqual(createdViewUrl, "http://resources/my-inventory-ui/dist/index.html");
+assert.strictEqual(createdViewUrl, "fw://resources/my-inventory-ui/dist/index.html");
 assert.strictEqual(destroyedViews, 1);
 assert.ok(webHandlers.has("use"));
 assert.ok(emittedToServer.some((event) => event.name === "hmp-inventory:ready"));

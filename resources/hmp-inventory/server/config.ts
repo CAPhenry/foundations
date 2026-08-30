@@ -10,7 +10,7 @@ function loadConfig(Hmp: Lib, options: { env?: NodeJS.ProcessEnv; cwd?: string }
         allowInventoryCommand: true,
         items: [],
         ui: {
-            url: "http://resources/hmp-inventory/dist/index.html",
+            url: "fw://resources/hmp-inventory/dist/index.html",
         },
     };
     const config = Hmp.config.load<InventoryConfig>(env.HMP_INVENTORY_CONFIG || "data/hmp-inventory.json", { cwd, defaults });
@@ -21,7 +21,7 @@ function loadConfig(Hmp: Lib, options: { env?: NodeJS.ProcessEnv; cwd?: string }
     if (!config.ui || typeof config.ui !== "object") config.ui = { ...defaults.ui };
     if (env.HMP_INVENTORY_UI_URL) config.ui.url = String(env.HMP_INVENTORY_UI_URL).trim();
     config.ui.url = String(config.ui.url || defaults.ui.url).trim();
-    if (!config.ui.url.startsWith("http://resources/") && !config.ui.url.startsWith("https://")) {
+    if (!config.ui.url.startsWith("fw://resources/") && !config.ui.url.startsWith("https://")) {
         throw new TypeError("hmp-inventory ui.url must be a resource URL or an HTTPS URL");
     }
     if (!Array.isArray(config.items)) throw new TypeError("hmp-inventory items must be an array");

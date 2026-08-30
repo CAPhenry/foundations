@@ -86,7 +86,7 @@
     const send=(name,payload)=>{try{callEvent(name,JSON.stringify(payload||{}))}catch(_){}};
     let data={items:[],container:{}},category="All",selected=null,query="";
     const esc=(s)=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-    const icon=(url)=>/^https?:\/\//i.test(String(url||""))?String(url):"http://resources/hmp-inventory/dist/icons/item.svg";
+    const icon=(url)=>/^(?:https?|fw):\/\//i.test(String(url||""))?String(url):"fw://resources/hmp-inventory/dist/icons/item.svg";
     function categories(){const map=new Map([["All",data.items.length],["Custom",data.custom?.length||0],["In-game",data.native?.length||0]]);for(const i of data.items)map.set(i.category,(map.get(i.category)||0)+1);return [...map];}
     function visible(){return data.items.filter(i=>(category==="All"||category==="Custom"&&i.source==="custom"||category==="In-game"&&i.source==="native"||i.category===category)&&(!query||(`${i.label} ${i.name} ${i.itemId||""}`).toLowerCase().includes(query)));}
     function renderTabs(){document.querySelector("#tabs").innerHTML=categories().map(([name,count])=>`<button class="tab ${name===category?"active":""}" data-tab="${esc(name)}"><span>${esc(name)}</span><span class="count">${count}</span></button>`).join("");document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{category=b.dataset.tab;selected=null;render()});}

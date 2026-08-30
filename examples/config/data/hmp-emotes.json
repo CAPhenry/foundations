@@ -11,7 +11,7 @@
     }
   ],
   "ui": {
-    "url": "http://resources/hmp-emotes/dist/menu.html"
+    "url": "fw://resources/hmp-emotes/dist/menu.html"
   },
   "aliases": {
     "popcorn": "/Game/Animation/Human/Stations/Sitting/STUF_STN_SIT_Bench_Eat_Box_v01_anm.STUF_STN_SIT_Bench_Eat_Box_v01_anm",

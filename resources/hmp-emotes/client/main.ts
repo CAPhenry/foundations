@@ -44,7 +44,7 @@ declare const LocalPlayer: {
     emotePreview(options?: PreviewOptions): PreviewState;
 };
 
-const DEFAULT_VIEW_URL = "http://resources/hmp-emotes/dist/menu.html";
+const DEFAULT_VIEW_URL = "fw://resources/hmp-emotes/dist/menu.html";
 const UI_CONTRACT = "hmp.emotes.ui/v1";
 const Input = Imports.get<HmpLibClient>("hmp-lib").input;
 let view = -1;
@@ -173,7 +173,7 @@ function configure(raw: unknown): void {
     const value = parse(raw);
     if (value.contract !== UI_CONTRACT) return;
     const next = String(value.url || "").trim();
-    if (!next || (next !== DEFAULT_VIEW_URL && !next.startsWith("http://resources/") && !next.startsWith("https://")) || next === viewUrl) return;
+    if (!next || (next !== DEFAULT_VIEW_URL && !next.startsWith("fw://resources/") && !next.startsWith("https://")) || next === viewUrl) return;
     const reopen = visible;
     hideMenu();
     destroyView();

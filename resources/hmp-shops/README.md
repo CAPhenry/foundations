@@ -21,7 +21,7 @@ Inventory.items.register({
     resource: "hmp-clothing",
     label: "Hogwarts School Robe",
     description: "A plain student robe.",
-    icon: "http://resources/hmp-clothing/icons/robe.png",
+    icon: "fw://resources/hmp-clothing/icons/robe.png",
     maxStack: 1,
     unique: true,
 });

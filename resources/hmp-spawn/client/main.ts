@@ -1,6 +1,6 @@
 import type { HmpControlLease, HmpLibClient } from "../../hmp-lib/types";
 
-const VIEW_URL = "http://resources/hmp-spawn/dist/index.html";
+const VIEW_URL = "fw://resources/hmp-spawn/dist/index.html";
 const Input = Imports.get<HmpLibClient>("hmp-lib").input;
 
 let view = -1;

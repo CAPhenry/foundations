@@ -37,7 +37,7 @@ async function run(): Promise<void> {
     };
     const config = {
         command: "emote", enabled: true, allowAll: false, maxFavorites: 2, maxAliases: 10,
-        editorGroups: [{ key: "admin", minimumGrade: 1 }], ui: { url: "http://resources/hmp-emotes/dist/menu.html" },
+        editorGroups: [{ key: "admin", minimumGrade: 1 }], ui: { url: "fw://resources/hmp-emotes/dist/menu.html" },
         aliases: {
             apple: "/Game/Apple.Apple",
             popcorn: "/Game/Popcorn.Popcorn",
