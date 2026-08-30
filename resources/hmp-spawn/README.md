@@ -1,6 +1,6 @@
 # hmp-spawn
 
-`hmp-spawn` completes the Foundation login path: account → character → world. After
+`hmp-spawn` completes the Foundations login path: account → character → world. After
 `hmp-characters` selects a character, this resource offers configured destinations and that
 character's last saved position, then performs a server-issued streamed teleport.
 

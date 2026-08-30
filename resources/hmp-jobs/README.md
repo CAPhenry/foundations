@@ -1,11 +1,11 @@
 # hmp-jobs
 
-`hmp-jobs` is Foundation's persistent employment layer. It provides code-registered jobs, grades,
+`hmp-jobs` is Foundations's persistent employment layer. It provides code-registered jobs, grades,
 permissions, multiple employments with one selected job, runtime duty state, a management menu,
 audited changes, and optional payroll through `hmp-banking`.
 
 Jobs do not replace `hmp-core` groups. Every current employment is projected to a character group
-(by default `job:<job-id>`), so banking and any other Foundation resource can use the same grade.
+(by default `job:<job-id>`), so banking and any other Foundations resource can use the same grade.
 Employment remains in MySQL when a defining resource stops; its runtime integrations and group
 projection are removed until that resource registers the job again.
 

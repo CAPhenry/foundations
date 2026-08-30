@@ -1,6 +1,6 @@
-# Install HMP Foundation
+# Install HMP Foundations
 
-This guide is for a server owner installing the complete Foundation pack. Foundation is one versioned
+This guide is for a server owner installing the complete Foundations pack. Foundations is one versioned
 unit: install all twenty-three `hmp-*` resources from the same release and upgrade them together.
 
 ## Before you begin
@@ -29,11 +29,11 @@ Follow [DATABASE.md](DATABASE.md). In short:
 3. Grant that user privileges only on `hogwartsmp.*`.
 4. Test the connection from the game-server machine.
 
-Do not import a schema. Foundation creates and upgrades all of its own tables on startup.
+Do not import a schema. Foundations creates and upgrades all of its own tables on startup.
 
 ## 2. Install the resource pack
 
-Download the release ZIP and open its `hmp-foundation` directory. Copy every directory inside its
+Download the release ZIP and open its `hmp-foundations` directory. Copy every directory inside its
 `resources` directory into `<server-root>/resources`.
 
 The result must look like this:
@@ -57,7 +57,7 @@ The result must look like this:
 ```
 
 Do not leave an extra nesting level such as
-`<server-root>/resources/hmp-foundation/resources/hmp-core`. There should be exactly twenty-three
+`<server-root>/resources/hmp-foundations/resources/hmp-core`. There should be exactly twenty-three
 top-level `hmp-*` directories.
 
 On Linux, resource and configuration names are case-sensitive. Preserve names such as `hmp-core`
@@ -67,7 +67,7 @@ For example, after extracting the release on Linux:
 
 ```sh
 sudo mkdir -p /opt/hogwartsmp/resources /opt/hogwartsmp/data
-sudo cp -a hmp-foundation/resources/hmp-* /opt/hogwartsmp/resources/
+sudo cp -a hmp-foundations/resources/hmp-* /opt/hogwartsmp/resources/
 sudo chmod +x /opt/hogwartsmp/HogwartsMPServer
 ```
 
@@ -83,16 +83,16 @@ Loading both stacks causes duplicate commands, selectors, input handlers, UI, an
 
 Copy the contents of the release's `examples/config/data` directory into `<server-root>/data`.
 
-On Linux, from the directory containing the extracted `hmp-foundation` folder:
+On Linux, from the directory containing the extracted `hmp-foundations` folder:
 
 ```sh
-sudo cp -a hmp-foundation/examples/config/data/. /opt/hogwartsmp/data/
+sudo cp -a hmp-foundations/examples/config/data/. /opt/hogwartsmp/data/
 ```
 
 At minimum:
 
 1. Configure `data/hmp-mysql.json`, or inject the equivalent `HMP_MYSQL_*` environment variables.
-   Replace every `CHANGE_ME` value. See [DATABASE.md](DATABASE.md#configure-foundation).
+   Replace every `CHANGE_ME` value. See [DATABASE.md](DATABASE.md#configure-foundations).
 2. Review `data/hmp-spawn.json` and verify its area and coordinates for the supported game build.
 3. Review `data/hmp-characters.json`, especially whether character deletion should be enabled.
 4. Review `data/hmp-admin.json` and decide which admin-group grades receive each capability.
@@ -101,11 +101,11 @@ At minimum:
 
 The examples are safe starting points, not a complete gameplay configuration. Server-specific shops,
 jobs, banks, interactions, activities, and other gameplay registrations belong in separate resources
-that consume Foundation APIs.
+that consume Foundations APIs.
 
 ### Environment variables and secrets
 
-Environment variables must be present in the process that launches the server. Foundation does not
+Environment variables must be present in the process that launches the server. Foundations does not
 automatically read `environment.example` or `.env` files.
 
 For closed testing before verified MafiaHub identities are available, set a unique admin bootstrap
@@ -124,7 +124,7 @@ commit it, or use it as a permanent staff identity system.
 
 Launch the server with `<server-root>` as its working directory. Relative paths such as
 `data/hmp-mysql.json` are resolved from that directory, not from the executable's original location
-or the Foundation repository.
+or the Foundations repository.
 
 ### Windows launch
 
@@ -161,7 +161,7 @@ Type=simple
 User=hogwartsmp
 Group=hogwartsmp
 WorkingDirectory=/opt/hogwartsmp
-EnvironmentFile=/etc/hogwartsmp/foundation.env
+EnvironmentFile=/etc/hogwartsmp/foundations.env
 ExecStart=/opt/hogwartsmp/HogwartsMPServer
 Restart=on-failure
 RestartSec=5
@@ -176,8 +176,8 @@ group-readable by the service account, and populate it with plain `KEY=value` li
 
 ```sh
 sudo install -d -o root -g hogwartsmp -m 0750 /etc/hogwartsmp
-sudo install -o root -g hogwartsmp -m 0640 /dev/null /etc/hogwartsmp/foundation.env
-sudoedit /etc/hogwartsmp/foundation.env
+sudo install -o root -g hogwartsmp -m 0640 /dev/null /etc/hogwartsmp/foundations.env
+sudoedit /etc/hogwartsmp/foundations.env
 sudo systemctl daemon-reload
 sudo systemctl enable --now hogwartsmp.service
 sudo journalctl -u hogwartsmp.service -f
@@ -233,7 +233,7 @@ ready messages from database-backed resources, for example:
 [hmp-progression] Character progression, replay-safe rewards, and managed talents ready
 ```
 
-Do not admit players if any Foundation resource logs `Startup failed`.
+Do not admit players if any Foundations resource logs `Startup failed`.
 
 ## 5. First-player checks
 
@@ -258,12 +258,12 @@ Use [CLOSED_TESTING.md](CLOSED_TESTING.md) for the full functional test pass.
 | `charselect` | Do not load with `hmp-characters`; both own character selection and creation. |
 | `interactables` | Do not load with `hmp-interact`; both can own the F interaction flow. |
 | `rp-core`, `rp-inventory`, `rp-ui`, other `rp-*` | Treat as a separate RP stack. Do not combine persistence or authority models without an explicit bridge. |
-| `roles` | Its roles are separate from `hmp-core` groups and do not grant Foundation admin capabilities. |
-| `house`, `housepoints` | Do not load with `hmp-houses`; Foundation owns house membership and House Cup history. |
+| `roles` | Its roles are separate from `hmp-core` groups and do not grant Foundations admin capabilities. |
+| `house`, `housepoints` | Do not load with `hmp-houses`; Foundations owns house membership and House Cup history. |
 | `items` | Debug/native inventory commands may coexist, but are not recommended on a public server. |
 | `audio`, `blips`, `doors`, `emotes`, `spells` | Do not load beside the matching `hmp-*` resource; both would own the same client system. |
-| `progression`, `spellupgrades` | Do not load with `hmp-progression`; Foundation owns durable XP, talent points, and managed talents. |
-| `duels`, `pvp` | Do not load with `hmp-duels`/`hmp-pvp`; port gamemode policy into the Foundation APIs. |
+| `progression`, `spellupgrades` | Do not load with `hmp-progression`; Foundations owns durable XP, talent points, and managed talents. |
+| `duels`, `pvp` | Do not load with `hmp-duels`/`hmp-pvp`; port gamemode policy into the Foundations APIs. |
 | `blips-dev`, `spellupgrades`, other probes | Keep diagnostic probes out of production. |
 | `gamemode` | May remain for chat and admin commands when it delegates environment policy to `hmp-world`; remove any older build that calls `World.setBoundaryPolicy` directly. |
 
@@ -278,21 +278,21 @@ Use [CLOSED_TESTING.md](CLOSED_TESTING.md) for the full functional test pass.
 | `Failed to open the referenced table 'hmp_characters'` | A dependent resource started without a completed `hmp-core` schema, often because packs were mixed or ordering was overridden. | Stop the server, install one complete release, restore manifest ordering, and inspect the `hmp-core` startup error first. |
 | `Cannot add foreign key constraint` | Existing tables have an incompatible schema/engine, or resources are from different versions. | For a new install, use an empty database. Otherwise inspect migration history and restore the matching backup rather than editing constraints blindly. |
 | `migration ... was modified after it was applied` | Code and recorded migration checksums do not match. | Install the exact pack version that owns the database; never edit `hmp_schema_migrations` to silence it. |
-| Commands print `No character is active` | The player has not selected a Foundation character. | Run `/characters`, select or create a character, then retry. |
-| Duplicate UI, commands, or input behavior | Legacy/mod demonstration resources are loaded with Foundation. | Make `<server-root>/resources` Foundation-only or use an explicit allowlist. |
+| Commands print `No character is active` | The player has not selected a Foundations character. | Run `/characters`, select or create a character, then retry. |
+| Duplicate UI, commands, or input behavior | Legacy/mod demonstration resources are loaded with Foundations. | Make `<server-root>/resources` Foundations-only or use an explicit allowlist. |
 | Configuration changes have no effect | The wrong data directory is being read or the server was not restarted. | Confirm the process working directory, file name, JSON validity, environment overrides, and restart server/client resources. |
 | Linux reports `Permission denied` | The binary is not executable or the service user cannot read/write the required path. | Run `chmod +x HogwartsMPServer`, inspect ownership with `ls -la`, and grant the service account access to `data` and `logs`; never use world-writable permissions. |
 | Linux reports a missing shared library | The wrong server archive was installed or a required library is absent. | Install the native Linux x86-64 server package and run `ldd ./HogwartsMPServer` from `<server-root>`; the HogwartsMP distribution should include its matching `libnode.so`. |
 | A resource works on Windows but is missing on Linux | A path changed case or used Windows separators. | Compare resource/config names exactly and use `/` in Linux paths. |
 
-If startup still fails, capture the first Foundation error—not only later dependency failures—plus the
+If startup still fails, capture the first Foundations error—not only later dependency failures—plus the
 sanitized MySQL target, pack version, database version, and relevant rows from `hmp_schema_migrations`.
 Never post passwords, connection URLs, bootstrap secrets, player IPs, or identity tokens.
 
 ## Upgrade and rollback
 
 1. Stop the server and prevent player connections.
-2. Back up the Foundation database and `<server-root>/data/hmp-*.json`.
+2. Back up the Foundations database and `<server-root>/data/hmp-*.json`.
 3. Read [CHANGELOG.md](CHANGELOG.md) and compare the new `examples/config` files with local settings.
 4. Replace all twenty-three `hmp-*` directories together; do not merge old and new `dist` directories.
 5. Start the server and let every migration and resource reach ready state before admitting players.
@@ -311,6 +311,6 @@ npm ci
 npm run verify
 ```
 
-The ready-to-install output is written to `build/hmp-foundation`. Install that generated directory
+The ready-to-install output is written to `build/hmp-foundations`. Install that generated directory
 using the same steps above. A source checkout's `resources` directory contains authoring files and is
 not the supported deployment artifact.

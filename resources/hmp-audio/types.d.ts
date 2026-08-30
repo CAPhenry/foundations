@@ -31,7 +31,7 @@ export interface HmpAudioPlayOptions {
     stopEvent?: string;
     /** Disable the native terminator lookup while retaining playing-id cancellation. */
     autoStop?: boolean;
-    /** Retain the Foundation handle until explicitly stopped, for custom sustains without a known terminator. */
+    /** Retain the Foundations handle until explicitly stopped, for custom sustains without a known terminator. */
     held?: boolean;
 }
 

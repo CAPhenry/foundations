@@ -1,6 +1,6 @@
 # hmp-core
 
-`hmp-core` is the persistent server-side spine of the HMP Foundation stack. It owns accounts,
+`hmp-core` is the persistent server-side spine of the HMP Foundations stack. It owns accounts,
 identity links, character slots, scoped groups and JSON metadata. Other resources consume these
 APIs instead of creating competing player tables.
 

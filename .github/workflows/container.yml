@@ -1,4 +1,4 @@
-name: Publish Foundation Image
+name: Publish Foundations Image
 
 on:
   push:

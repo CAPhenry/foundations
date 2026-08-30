@@ -1,11 +1,11 @@
 # hmp-pvp
 
-`hmp-pvp` is the one Foundation resource that installs the native server `Pvp.setPolicy` callback.
+`hmp-pvp` is the one Foundations resource that installs the native server `Pvp.setPolicy` callback.
 Gameplay resources register owner-scoped rules instead of replacing one another's global callback.
 
 Rules evaluate from highest priority to lowest. `undefined` abstains; the first boolean, number, or
 decision object is final. A throwing rule fails closed for that hit. The default is also deny, so
-installing Foundation never silently changes a consent-only server into open PvP.
+installing Foundations never silently changes a consent-only server into open PvP.
 
 `hmp-pvp` also owns the server-wide lethality mode. With it off, an otherwise undecided hit is denied.
 With it on, an otherwise undecided hit proceeds through native full arbitration, so lethal spell damage

@@ -1,10 +1,10 @@
-# HMP Foundation
+# HMP Foundations
 
-HMP Foundation is the cohesive, versioned stack of common resources for HogwartsMP servers. Its
+HMP Foundations is the cohesive, versioned stack of common resources for HogwartsMP servers. Its
 resources share the `hmp-` namespace, are designed and tested together, and remain independently
 adoptable through normal resource dependencies.
 
-This repository is separate from the MafiaHub C++ Framework used to build HogwartsMP. Foundation is
+This repository is separate from the MafiaHub C++ Framework used to build HogwartsMP. Foundations is
 the server scripting layer built on top of that runtime.
 
 Installing a server? Start with [INSTALL.md](INSTALL.md). It covers the directory layout,
@@ -42,7 +42,7 @@ The dedicated server may run on Windows x64 or Linux x86-64; Hogwarts Legacy cli
 
 ## Development
 
-Node.js 22 or newer is required for Foundation's build tools. The generated resources target Node.js
+Node.js 22 or newer is required for Foundations's build tools. The generated resources target Node.js
 22 and run on the newer embedded Node runtime shipped by HogwartsMP.
 
 ```sh
@@ -56,7 +56,7 @@ Resource implementations are strict TypeScript under each resource's `server/`, 
 JavaScript for browser clients) under `dist/`; runtime manifests continue to reference those generated
 JavaScript files. Source-level unit tests use `tsx`, while smoke tests execute the compiled bundles.
 
-`npm run package` writes a ready-to-load pack under `build/hmp-foundation/resources/`. Runtime
+`npm run package` writes a ready-to-load pack under `build/hmp-foundations/resources/`. Runtime
 artifacts contain bundled dependencies: server owners do not run npm inside the game-server image.
 
 For deployment, use the [installation and start-order guide](INSTALL.md) and [database guide](DATABASE.md).
@@ -65,12 +65,12 @@ the [compatibility matrix](COMPATIBILITY.md). For structured playtest coverage a
 the [closed testing guide](CLOSED_TESTING.md).
 
 The repository also publishes `ghcr.io/<owner>/<repository>:edge` from `main` and versioned tags
-from releases. This resource-pack image is build input for the runnable Foundation server variant;
+from releases. This resource-pack image is build input for the runnable Foundations server variant;
 server owners normally use that server image or the downloadable ZIP instead of pulling it directly.
 
 ## Versioning
 
-Foundation uses one lockstep version for the pack and every first-party resource it contains. Install,
+Foundations uses one lockstep version for the pack and every first-party resource it contains. Install,
 upgrade, and roll back the twenty-three resources as one unit. Before `1.0.0`, minor releases may contain
 breaking API, configuration, or schema changes; patch releases are intended to remain compatible
 within their minor line. See the [full version policy](COMPATIBILITY.md#version-policy) and
@@ -78,4 +78,4 @@ within their minor line. See the [full version policy](COMPATIBILITY.md#version-
 
 ## License
 
-HMP Foundation uses the same [MafiaHub OSS license](LICENSE) as the main HogwartsMP mod repository.
+HMP Foundations uses the same [MafiaHub OSS license](LICENSE) as the main HogwartsMP mod repository.

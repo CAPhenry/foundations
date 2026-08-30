@@ -205,7 +205,7 @@ function createProgressionService(dependencies: ProgressionDependencies): Progre
         const existing = await repository.talent(mutation.characterId, mutation.talentId);
         if (existing?.status === "owned") return existing;
         const current = await repository.profile(mutation.characterId);
-        if (current.talentPoints < 1) throw new Error("No Foundation talent points are available");
+        if (current.talentPoints < 1) throw new Error("No Foundations talent points are available");
         const native = await requestNative(player, "purchase", { talentId: mutation.talentId });
         if (native.ok !== true) throw new Error(String(native.detail || "The game refused the talent purchase"));
         try {

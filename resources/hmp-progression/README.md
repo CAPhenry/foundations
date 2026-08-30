@@ -1,11 +1,11 @@
 # hmp-progression
 
 `hmp-progression` owns character-scoped experience, the last game-confirmed level, talent points,
-Foundation-managed talents, and a replay-safe reward ledger. MySQL is authoritative; the client
+Foundations-managed talents, and a replay-safe reward ledger. MySQL is authoritative; the client
 reconciler applies an absolute snapshot through Hogwarts Legacy's native progression and talent APIs.
 
 The resource does not accept unsolicited client XP. A modified client can still alter its local
-single-player simulation, but it cannot award itself durable Foundation XP or invent a managed talent.
+single-player simulation, but it cannot award itself durable Foundations XP or invent a managed talent.
 Native level and talent-point reports are accepted only for the exact character, revision, and XP
 snapshot the server issued. Server gameplay should use this resource's profile for gates.
 
@@ -20,7 +20,7 @@ snapshot the server issued. Server gameplay should use this resource's profile f
   set XP to it.
 - `progression.transaction(reference)`, `history`, `pending`, and `recover` — inspect/recover rewards.
 - `progression.sync(player)` — resend the complete native snapshot.
-- `talents.list(target, includeRevoked?)` — list Foundation-managed talent state.
+- `talents.list(target, includeRevoked?)` — list Foundations-managed talent state.
 - `talents.grant`, `purchase`, `revoke`, and `reset` — manage durable talent entitlements.
 - `talents.setPoints(target, points, options)` — set the canonical unspent point pool.
 - `status()` — readiness and reconciliation diagnostics.
@@ -40,7 +40,7 @@ await progression.add(player, 250, {
 ```
 
 `talents.purchase` asks the player's native tree to validate the talent's prerequisites, then records
-the entitlement and spends exactly one Foundation talent point. `talents.grant` is the administrative
+the entitlement and spends exactly one Foundations talent point. `talents.grant` is the administrative
 path: it deliberately ignores native purchase gates and costs no point. Revocations are retained as
 tombstones so a talent cannot return from the local save on reconnect.
 

@@ -41,7 +41,7 @@ if (config.enableCommands) {
     commands.register(config.command, {
         aliases: ["sounds"],
         usage: `/${config.command} <list [search]|play <event> [range]|local <event>|stop <handle>|status>`,
-        description: "Inspect and test Foundation audio.",
+        description: "Inspect and test Foundations audio.",
     }, ({ player, args, invokedAs, reply, usage }) => {
         const action = String(args.shift() || (invokedAs === "sounds" ? "list" : "status")).toLowerCase();
         const owner = { resource: "hmp-audio", id: `command-${player.id}` };

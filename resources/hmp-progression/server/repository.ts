@@ -152,7 +152,7 @@ function createRepository(database: Database): ProgressionRepository {
             const existing = await talent(mutation.characterId, mutation.talentId, tx, true);
             if (existing?.status === "owned") return existing;
             const current = await profile(mutation.characterId, tx, true);
-            if (current.talentPoints < 1) throw new Error("No Foundation talent points are available");
+            if (current.talentPoints < 1) throw new Error("No Foundations talent points are available");
             await writeTalent(tx, { ...mutation, status: "owned", acquisition: "purchase" });
             await tx.update("UPDATE hmp_progression_profiles SET talent_points = talent_points - 1, revision = revision + 1 WHERE character_id = ?", [mutation.characterId]);
             return (await talent(mutation.characterId, mutation.talentId, tx, true))!;

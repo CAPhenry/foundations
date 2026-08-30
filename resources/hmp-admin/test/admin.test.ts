@@ -171,7 +171,7 @@ test("rejects administrative teleports across coordinate spaces", async () => {
     assert.strictEqual(state.service.status().pendingTeleports, 0);
 });
 
-test("routes corrective mutations through foundation services with completed audit", async () => {
+test("routes corrective mutations through foundations services with completed audit", async () => {
     const state = setup();
     await state.service.actions.inventory(state.verifiedAdmin, state.verifiedTarget, "give", "test:wand", 2, "test item");
     await state.service.actions.group(state.verifiedAdmin, state.verifiedTarget, "set", "character", "prefect", 1, "promotion");

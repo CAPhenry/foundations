@@ -1,6 +1,6 @@
 # hmp-duels
 
-`hmp-duels` is Foundation's consensual, non-lethal one-on-one wizard duel resource. A challenge is a
+`hmp-duels` is Foundations's consensual, non-lethal one-on-one wizard duel resource. A challenge is a
 private `hmp-activities` invitation; accepting creates an exclusive two-player session scoped to the
 same game area and virtual world. `hmp-pvp` then authorizes only that agreed pair while allowing other
 PvP resources to own their own matches or zones.

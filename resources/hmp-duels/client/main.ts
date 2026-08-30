@@ -1,6 +1,6 @@
 import type { HmpPvpClient } from "../../hmp-pvp/types";
 
-const pvpFoundation = Imports.get<HmpPvpClient>("hmp-pvp");
+const pvpFoundations = Imports.get<HmpPvpClient>("hmp-pvp");
 let countdownTimer: ReturnType<typeof setInterval> | null = null;
 let restoreTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -8,7 +8,7 @@ function reset(): void {
     if (countdownTimer) clearInterval(countdownTimer); countdownTimer = null;
     if (restoreTimer) clearTimeout(restoreTimer); restoreTimer = null;
     try {
-        Pvp.endDuelContext(); Pvp.showMeter(null); pvpFoundation.mode.restore();
+        Pvp.endDuelContext(); Pvp.showMeter(null); pvpFoundations.mode.restore();
         LocalPlayer.stateInfo.setInvulnerableToDamage(false);
     } catch (_) { /* no pawn while loading */ }
 }

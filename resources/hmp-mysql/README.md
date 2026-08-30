@@ -1,6 +1,6 @@
 # hmp-mysql
 
-Shared, promise-based SQL access for HMP Foundation resources. It uses a connection pool and the
+Shared, promise-based SQL access for HMP Foundations resources. It uses a connection pool and the
 MySQL protocol, so it supports both **MySQL 8** and current **MariaDB** servers. It is not affiliated
 with Overextended and does not claim drop-in `oxmysql` compatibility.
 
@@ -13,11 +13,11 @@ HogwartsMP's built-in `Storage` remains the zero-configuration choice for simple
 
 ## Distribution
 
-Foundation release artifacts contain a bundled `dist/main.js`, including the database driver. A
+Foundations release artifacts contain a bundled `dist/main.js`, including the database driver. A
 server operator does not install npm packages. Contributors working from source run `npm ci` and
-`npm run build` at the Foundation repository root.
+`npm run build` at the Foundations repository root.
 
-The resource is inert when it has no configuration, so including Foundation does not force every
+The resource is inert when it has no configuration, so including Foundations does not force every
 server to run a database.
 
 ## Configure

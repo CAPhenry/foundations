@@ -77,7 +77,7 @@
     const send=(name,payload={})=>{try{callEvent(name,JSON.stringify(payload))}catch(_){}};
     const node=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=String(text);return el};
     const add=(parent,...children)=>{for(const child of children)if(child)parent.appendChild(child);return parent};
-    function heading(title,content){const eyebrow=node("div","eyebrow","HMP Foundation");const h=node("h1","",title);const p=content?node("p","content",content):null;add(panel,eyebrow,h,p)}
+    function heading(title,content){const eyebrow=node("div","eyebrow","HMP Foundations");const h=node("h1","",title);const p=content?node("p","content",content):null;add(panel,eyebrow,h,p)}
     function actions(cancelLabel,confirmLabel,onConfirm,canCancel=true){const row=node("div","actions");if(canCancel){const cancel=node("button","",cancelLabel||"Cancel");cancel.onclick=()=>finish(current?.type==="alert"?"cancel":current?.type==="progress"?false:null);row.appendChild(cancel)}if(confirmLabel){const confirm=node("button","primary",confirmLabel);confirm.onclick=onConfirm;row.appendChild(confirm);setTimeout(()=>confirm.focus(),0)}panel.appendChild(row)}
     function finish(result){if(!current)return;const id=current.id;current=null;cancelAnimationFrame(progressFrame);progressFrame=0;closeSelects();overlay.classList.add("transitioning");panel.replaceChildren();send("response",{id,result})}
     function renderAlert(payload){heading(payload.title,payload.content);actions(payload.cancelLabel,payload.confirmLabel,()=>finish("confirm"),payload.cancel!==false)}

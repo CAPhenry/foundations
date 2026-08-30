@@ -1,8 +1,8 @@
 # hmp-admin
 
-`hmp-admin` is Foundation's server-authoritative moderation and recovery resource. It provides a
+`hmp-admin` is Foundations's server-authoritative moderation and recovery resource. It provides a
 staff menu built from `hmp-ui`, capability-based access through `hmp-core` groups, durable warnings
-and identity bans, corrective actions across Foundation resources, and a persistent audit trail.
+and identity bans, corrective actions across Foundations resources, and a persistent audit trail.
 
 Open it with `/admin`. No privileged action is exposed as a client event: selections return to the
 server and are authorized again before the action begins. An audit row is written before every
@@ -60,7 +60,7 @@ accepts `HMP_ADMIN_COMMAND`, `HMP_ADMIN_REQUIRE_VERIFIED`, and `HMP_ADMIN_CONFIG
 - Recovery: inspect and explicitly complete, compensate, or fail pending bank transactions.
 - Audit: recent pending, completed, and failed actions with actor, target, reason, and error.
 
-Noclip, god mode, and spectating are intentionally absent. Foundation does not yet have sufficiently
+Noclip, god mode, and spectating are intentionally absent. Foundations does not yet have sufficiently
 authoritative Framework contracts for those tools. Inventory corrections are limited to definitions
 registered with `hmp-inventory`; native entries are routed through the Framework's authoritative catalog.
 The inventory editor searches that catalog on the server first and sends at most 32 exact choices to the

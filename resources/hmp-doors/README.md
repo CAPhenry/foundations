@@ -2,7 +2,7 @@
 
 `hmp-doors` gives the server final authority over which Hogwarts Legacy doors and logical locks each
 player may pass. The shipped configuration unlocks every physical door while leaving it closed, which
-matches Foundation's open-world default. Remove that rule for vanilla locking or add ranked exceptions.
+matches Foundations's open-world default. Remove that rule for vanilla locking or add ranked exceptions.
 
 Physical door actor names and logical `LockDefinition` IDs are deliberately separate targets. A physical
 door rule affects whether the player can open that streamed door. A logical lock rule affects game state
@@ -41,7 +41,7 @@ Lower priority numbers are stronger. At an equal priority, deny wins. A rule tar
 membership is required. Rules without `match` apply to everyone.
 
 The client passes physical policy to the Framework's streaming-aware `Doors.setPolicy()`, so it applies
-again as world cells load; Foundation does not poll nearby actors. An allow unlocks a door but never forces
+again as world cells load; Foundations does not poll nearby actors. An allow unlocks a door but never forces
 it open.
 
 ## API
@@ -77,4 +77,4 @@ not durable policy. Set `enableCommands` to false outside testing if script APIs
 management surface.
 
 Chests are not managed by this resource. Chest opening and loot authority require a separate design that
-coordinates native save state and Foundation inventory semantics.
+coordinates native save state and Foundations inventory semantics.

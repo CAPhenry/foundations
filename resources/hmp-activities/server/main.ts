@@ -22,9 +22,9 @@ Exports.register("invitations", activities.invitations);
 Exports.register("status", activities.status);
 
 if (config.enableTestActivity) activities.definitions.register({
-    id: "foundation:test-party",
+    id: "foundations:test-party",
     resource: "hmp-activities",
-    label: "Foundation test party",
+    label: "Foundations test party",
     description: "A non-gameplay role-composition probe for closed testing.",
     minimumPlayers: 2,
     maximumPlayers: 5,

@@ -1,5 +1,5 @@
 # Inject these values with the dedicated-server service or container runtime.
-# Foundation does not automatically load this file.
+# Foundations does not automatically load this file.
 HMP_MYSQL_URL=mysql://hogwartsmp:CHANGE_ME@127.0.0.1:3306/hogwartsmp
 HMP_ADMIN_BOOTSTRAP_SECRET=CHANGE_ME_TO_A_UNIQUE_RANDOM_VALUE
 

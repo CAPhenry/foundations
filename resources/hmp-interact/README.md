@@ -1,6 +1,6 @@
 # hmp-interact
 
-`hmp-interact` is Foundation's shared, server-authoritative “walk up and press F” layer. It owns the
+`hmp-interact` is Foundations's shared, server-authoritative “walk up and press F” layer. It owns the
 single interaction key and world prompt, while gameplay resources register zones and handlers on the
 server. The client chooses what to display; it never decides whether an action is legal.
 
@@ -140,8 +140,8 @@ server `player.position`, and optional `WorldObject` props. Do not run both reso
 owners. Move each old placement into an `Interact.register(...)` call in its owning gameplay resource,
 then disable the old `interactables` resource.
 
-Foundation no longer binds F directly: `hmp-interact` registers it through `Hmp.input.shortcuts`.
-Another Foundation mode can claim F at a higher priority while it is eligible; an equal-priority
+Foundations no longer binds F directly: `hmp-interact` registers it through `Hmp.input.shortcuts`.
+Another Foundations mode can claim F at a higher priority while it is eligible; an equal-priority
 collision refuses both actions and is visible in `Hmp.input.status()`.
 
 True entity/raycast focus is intentionally not emulated. The current Framework exposes reliable

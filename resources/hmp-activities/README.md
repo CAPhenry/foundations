@@ -1,6 +1,6 @@
 # hmp-activities
 
-`hmp-activities` is Foundation's reusable server-side lobby and session layer. Gameplay resources
+`hmp-activities` is Foundations's reusable server-side lobby and session layer. Gameplay resources
 register activity types; this resource owns public discovery, group membership, role or team capacity,
 ready checks, targeted invitations, leader handoff, expiry, disconnect cleanup, and
 start/finish/cancel transitions.
@@ -12,7 +12,7 @@ deliberately ephemeral; the activity owner persists scores or history when it co
 ## Dungeon LFG example
 
 A future `hmp-dungeon-lfg` resource can define the composition it needs without putting dungeon
-knowledge in Foundation:
+knowledge in Foundations:
 
 ```ts
 const Activities = Imports.get("hmp-activities");
@@ -142,12 +142,12 @@ membership or role-capacity rules on the client.
 ## Closed-testing command
 
 Set `enableTestActivity` in `data/hmp-activities.json` to register the non-gameplay
-`foundation:test-party` definition. It requires a healer, caster, and at least two total players.
+`foundations:test-party` definition. It requires a healer, caster, and at least two total players.
 
 ```text
 /activities definitions
 /activities list
-/activities create foundation:test-party healer
+/activities create foundations:test-party healer
 /activities join <short-id> caster
 /activities ready [short-id]
 /activities start [short-id]

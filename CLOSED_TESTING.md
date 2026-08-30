@@ -1,6 +1,6 @@
-# HMP Foundation closed testing
+# HMP Foundations closed testing
 
-This pass should answer two questions: can players complete the normal Foundation flows without
+This pass should answer two questions: can players complete the normal Foundations flows without
 staff intervention, and can staff understand and safely use the intervention tools when something
 goes wrong?
 
@@ -133,7 +133,7 @@ created test transaction after its state has been inspected.
   in-game spell diamond.
 - Grant one spell to a character, reconnect, and confirm it remains unlocked. Switch characters and
   confirm the personal grant does not leak.
-- Revoke the grant and confirm Foundation policy changes immediately. Confirm the documented native
+- Revoke the grant and confirm Foundations policy changes immediately. Confirm the documented native
   limitation: the already-unlocked spell may remain usable until reconnect/travel, then must disappear.
 - Set bonus loadouts from 0 through 3 and confirm exactly 1 through 4 total diamonds are available.
   Return loadouts to unmanaged ownership and confirm natural progression is no longer altered.
@@ -148,7 +148,7 @@ created test transaction after its state has been inspected.
 - Run `/progression status` on a new character, add XP as staff, and confirm the reported native level
   and applied/current revisions converge after the world is ready.
 - Repeat one reward through a small test gameplay resource with the same explicit reference and confirm
-  XP changes once. Reuse that reference with a different amount and confirm Foundation rejects it.
+  XP changes once. Reuse that reference with a different amount and confirm Foundations rejects it.
 - Set a lower and higher level target and confirm XP, the native level bar, and talent points reconcile
   without multiplying talent points after reconnect or area travel.
 - Grant a talent, reconnect, and confirm it returns. Revoke it, reconnect again, and confirm the
@@ -157,7 +157,7 @@ created test transaction after its state has been inspected.
   spent and the entitlement persists. Attempt an unavailable talent and confirm neither the point nor
   the durable ledger changes.
 - Switch characters and confirm XP, level, talent points, and managed talents do not leak. Local XP
-  earned outside a server reward must not silently become durable Foundation XP.
+  earned outside a server reward must not silently become durable Foundations XP.
 - Report duplicate XP, revision counters that never converge, talent points multiplying on travel,
   failed revocations, purchases recorded after native refusal, or any progression state crossing characters.
 
@@ -171,7 +171,7 @@ created test transaction after its state has been inspected.
 ### Activities and LFG substrate
 
 - Keep the example configuration's `enableTestActivity` enabled for this pass. Have one player run
-  `/activities create foundation:test-party healer` and another use `/activities list`, join the
+  `/activities create foundations:test-party healer` and another use `/activities list`, join the
   displayed short ID as `caster`, and ready up.
 - Confirm the lobby is not startable until the healer/caster minimums, total-player minimum, and every
   ready flag are satisfied. Confirm a second healer is rejected because that role is full.

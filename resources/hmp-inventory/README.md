@@ -9,7 +9,7 @@ The split is intentional. A made-up letter or evidence bag must never be injecte
 
 ## Installation
 
-Start the Foundation resources in dependency order:
+Start the Foundations resources in dependency order:
 
 ```text
 hmp-mysql
@@ -67,7 +67,7 @@ Replacement pages implement the versioned `hmp.inventory.ui/v1` bridge:
 - call `callEvent("use", JSON.stringify(target))`, where the target is either
   `{ source: "custom", slot }` or `{ source: "native", itemId, variation? }`.
 
-The Foundation client bridge continues to own the view, focus and input lease. The server continues to
+The Foundations client bridge continues to own the view, focus and input lease. The server continues to
 validate every action and remains the sole authority for item state. Contract additions will remain
 backward-compatible within `v1`; a breaking message change requires a new contract version.
 

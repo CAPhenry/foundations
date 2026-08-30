@@ -1,4 +1,4 @@
-# Example Foundation configuration
+# Example Foundations configuration
 
 Copy the contents of `data` to `<server-root>/data`, where `<server-root>` is the working directory
 used to launch `HogwartsMPServer.exe` on Windows or `HogwartsMPServer` on Linux. Edit the copies;
@@ -25,7 +25,7 @@ keep the fallback `deny` and lethal mode off unless the server intentionally run
 The MySQL JSON intentionally contains `CHANGE_ME`. Prefer injecting `HMP_MYSQL_URL` or the individual
 database environment variables instead of keeping a production password in the file. Likewise,
 `HMP_ADMIN_BOOTSTRAP_SECRET` exists only in the process environment and must contain at least 16 bytes.
-Foundation does not automatically read `environment.example` or a `.env` file.
+Foundations does not automatically read `environment.example` or a `.env` file.
 
 Review at minimum:
 

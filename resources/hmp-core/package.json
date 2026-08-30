@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "author": "HogwartsMP",
-  "description": "Persistent account, identity, character, group and metadata foundation for HogwartsMP servers.",
+  "description": "Persistent account, identity, character, group and metadata foundations for HogwartsMP servers.",
   "license": "SEE LICENSE IN LICENSE",
   "main": "dist/main.js",
   "scripts": {

@@ -1,13 +1,13 @@
-# HMP Foundation compatibility
+# HMP Foundations compatibility
 
-This matrix describes Foundation `0.1.0`. “Supported” means the combination is an intended release
+This matrix describes Foundations `0.1.0`. “Supported” means the combination is an intended release
 target. “Closed-test” means it is the current validation baseline but has not yet earned a stable
 upstream release identifier.
 
 | Component | Supported baseline | Status | Notes |
 |---|---|---|---|
-| HMP Foundation | `0.1.0` pack and resources | Supported | All twenty-three resources must use the same version. |
-| HogwartsMP scripting host | Mod commit `d3275c04` or newer | Closed-test | Pin the eventual upstream release tag before a public Foundation release. |
+| HMP Foundations | `0.1.0` pack and resources | Supported | All twenty-three resources must use the same version. |
+| HogwartsMP scripting host | Mod commit `d3275c04` or newer | Closed-test | Pin the eventual upstream release tag before a public Foundations release. |
 | Hogwarts Legacy client data | Steam build ID `20773316` | Supported baseline | The native inventory catalog declares this game-data build. Other builds require revalidation. |
 | Dedicated-server JavaScript | Embedded Node.js 22 runtime | Supported | Release resources contain bundled dependencies. |
 | Source build | Node.js 22 or newer and npm | Supported | `npm ci` followed by `npm run verify`. |
@@ -19,7 +19,7 @@ upstream release identifier.
 
 ## Required scripting capabilities
 
-Until HogwartsMP publishes a stable version that covers Foundation, compatibility is capability-based.
+Until HogwartsMP publishes a stable version that covers Foundations, compatibility is capability-based.
 The host must provide:
 
 - manifest resource dependencies, priorities, exports, and `Imports.get()`;
@@ -31,7 +31,7 @@ The host must provide:
 - server-owned hold/release primitives used by administration;
 - `InventoryCatalog` schema version 1 and the server-authoritative player inventory surface, including
   replace, grant/remove, use, persistence control, and revision acknowledgement;
-- the current native Galleons definition (with `native:knuts` retained only as a Foundation alias);
+- the current native Galleons definition (with `native:knuts` retained only as a Foundations alias);
 - the server-authoritative `player.house` property, including deferred world-ready application and the
   native robe/crest character rebuild;
 - client `Doors` logical-lock, Alohomora, physical-door diagnostic, and streaming-aware policy builtins;
@@ -50,11 +50,11 @@ The host must provide:
   team relationships, duel context, opponent meter, damage immunity and near-death kneel controls.
 
 The current PvP host has two presentation caveats: relayed Killing Curse hits do not reproduce the
-victim-side green-bolt cosmetic, and target/team writes require the remote proxy to be streamed. Foundation
+victim-side green-bolt cosmetic, and target/team writes require the remote proxy to be streamed. Foundations
 re-fans complete snapshots for late joiners and exposes `/pvp sync` for recovery; neither caveat weakens
 server arbitration or the duel health floor.
 
-Asynchronous resource lifecycle is not a requirement for Foundation `0.1.0`. The current pack still
+Asynchronous resource lifecycle is not a requirement for Foundations `0.1.0`. The current pack still
 uses the existing synchronous lifecycle and will adopt the asynchronous contract after upstream
 support lands.
 
@@ -63,12 +63,12 @@ support lands.
 The closed-test baseline uses asserted client identifiers because a server-validatable MafiaHub
 identity provider is not available yet. Do not treat those identifiers as proof of identity. The
 default admin policy requires verified identity for durable bans and keeps unsafe asserted-identity
-bans disabled. A later provider should change the trust source without changing Foundation account or
+bans disabled. A later provider should change the trust source without changing Foundations account or
 character ownership APIs.
 
 ## Version policy
 
-Foundation follows Semantic Versioning at the pack boundary with these pre-`1.0.0` rules:
+Foundations follows Semantic Versioning at the pack boundary with these pre-`1.0.0` rules:
 
 - The root package, every first-party resource manifest, internal dependency pins, release tag, ZIP,
   and container tag share one exact version.

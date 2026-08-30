@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "author": "HogwartsMP",
-  "description": "Consensual, non-lethal wizard duels built on Foundation activities and composable PvP policy.",
+  "description": "Consensual, non-lethal wizard duels built on Foundations activities and composable PvP policy.",
   "license": "SEE LICENSE IN LICENSE",
   "main": "dist/server.js",
   "scripts": {

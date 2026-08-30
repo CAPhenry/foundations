@@ -47,7 +47,7 @@ if (config.enableCommands) {
     const commands = Hmp.command.createRouter({ prefix: "[blips]", logger });
     commands.register(config.command, {
         usage: `/${config.command} <status|list|marker [ttl]|circle [radius] [ttl]|pulse|remove>`,
-        description: "Inspect and privately test Foundation markers.",
+        description: "Inspect and privately test Foundations markers.",
     }, async ({ player, args, reply, usage }) => {
         const action = String(args.shift() || "status").toLowerCase();
         if (action === "status") {
@@ -71,7 +71,7 @@ if (config.enableCommands) {
                 kind: action,
                 position: player.position,
                 radius,
-                label: "Foundation test",
+                label: "Foundations test",
                 icon: circle ? "" : "UI_T_MiniMap_Waypoint",
                 ttl,
                 audience: [player],

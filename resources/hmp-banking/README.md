@@ -1,11 +1,11 @@
 # hmp-banking
 
-`hmp-banking` is Foundation's server-authoritative account and money-ledger layer. It provides one
+`hmp-banking` is Foundations's server-authoritative account and money-ledger layer. It provides one
 personal account per character and currency, registered organization accounts, atomic internal
 transfers, native-cash deposits and withdrawals, idempotent references, recent activity, and a
 server-driven banking menu.
 
-Foundation calls the player-facing currency **Galleons**. Hogwarts Legacy stores that scalar
+Foundations calls the player-facing currency **Galleons**. Hogwarts Legacy stores that scalar
 internally in an inventory item named `Knuts`; `hmp-inventory` bridges it through the canonical name
 `native:galleons`, with `native:knuts` retained as a compatibility alias. Physical Galleons remain in
 the character inventory until deposited. Bank balances are separate MySQL state; this distinction

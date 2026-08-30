@@ -1,6 +1,6 @@
 # hmp-audio
 
-`hmp-audio` is the shared Wwise playback service for Foundation resources. It keeps the native
+`hmp-audio` is the shared Wwise playback service for Foundations resources. It keeps the native
 HogwartsMP audio capabilities—game events, positional attenuation, attached playback, automatic bank
 discovery, authored stop events, and custom banks—while adding ownership, aliases, audience helpers,
 limits, diagnostics, and cleanup across resource reloads.
@@ -37,7 +37,7 @@ Available server scopes are:
 - `playForPlayers(owner, players, event, options)` — private at each member of an explicit audience;
 - `playForAll(owner, event, options)` — non-positional at every player's listener.
 
-Every successful play returns a Foundation handle. Only its owner can stop it. Calling
+Every successful play returns a Foundations handle. Only its owner can stop it. Calling
 `sounds.release(owner)` stops that owner's live sounds; when a resource stops, hmp-audio does this for
 every scope belonging to that resource automatically.
 
@@ -64,7 +64,7 @@ Audio.sounds.playAt(owner, "accio", position, { duration: 5 });
 
 One-shot handles are forgotten after `oneShotHandleMs` (60 seconds by default). Known sustains remain
 tracked. For a custom sustain whose bank does not expose a known terminator, pass `held: true` so its
-handle remains available until stop or resource cleanup. `held` is a Foundation bookkeeping option
+handle remains available until stop or resource cleanup. `held` is a Foundations bookkeeping option
 and is not forwarded to the native runtime.
 
 ## Aliases and discovery
@@ -142,7 +142,7 @@ Environment overrides are `HMP_AUDIO_CONFIG`, `HMP_AUDIO_RANGE`, `HMP_AUDIO_MAX_
 ## Deliberate v1 exclusions
 
 The native music priority stack, global RTPCs, global states, and engine-wide stop-all remain outside
-the Foundation contract. The current native music stack cannot restore the game's score, and a music
+the Foundations contract. The current native music stack cannot restore the game's score, and a music
 event name can only be pushed once per client session. RTPC and state writes likewise cannot restore
 the previous owner's value. Those operations remain available through the low-level native `Audio`
 builtin for specialized resources that knowingly accept those global side effects.

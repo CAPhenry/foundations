@@ -62,7 +62,7 @@ if (config.enableCommands) Events.on("chatCommand", (player: Player, _message: s
             const selected = target(args[0]);
             if (!selected) { reply(`Usage: /${config.command} talents [me|nick|#id]`); return; }
             const [profile, talents] = await Promise.all([service.progression.get(selected), service.talents.list(selected)]);
-            reply(`${selected.nickname}: ${profile.talentPoints} point(s); ${talents.length ? talents.map((entry) => `${entry.talentId}${entry.level > 1 ? `(${entry.level})` : ""}`).join(", ") : "no Foundation-managed talents"}`);
+            reply(`${selected.nickname}: ${profile.talentPoints} point(s); ${talents.length ? talents.map((entry) => `${entry.talentId}${entry.level > 1 ? `(${entry.level})` : ""}`).join(", ") : "no Foundations-managed talents"}`);
             return;
         }
         if (subcommand === "buy") {
@@ -77,7 +77,7 @@ if (config.enableCommands) Events.on("chatCommand", (player: Player, _message: s
         if (subcommand === "reset") {
             const resetTarget = target(args[0]);
             if (!resetTarget) { reply(`Usage: /${config.command} reset <me|nick|#id>`); return; }
-            reply(`Revoked ${await service.talents.reset(resetTarget, context)} Foundation-managed talent(s) from ${resetTarget.nickname}.`);
+            reply(`Revoked ${await service.talents.reset(resetTarget, context)} Foundations-managed talent(s) from ${resetTarget.nickname}.`);
             return;
         }
         const selected = target(args[1]);

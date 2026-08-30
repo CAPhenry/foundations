@@ -1,6 +1,6 @@
 # hmp-spells
 
-`hmp-spells` is Foundation's character-scoped spell entitlement and loadout layer. Server rules decide
+`hmp-spells` is Foundations's character-scoped spell entitlement and loadout layer. Server rules decide
 which native Hogwarts Legacy spell locks remain unlocked; direct grants and managed bonus loadouts persist
 on the active `hmp-core` character.
 
@@ -65,9 +65,9 @@ Spell grants and loadout ownership are stored together under the active characte
 `hmp-spells:entitlements` metadata key. They never leak between character slots.
 
 Native spell locks are currently additive within a live game session. A revoked spell disappears from
-Foundation policy immediately but may remain castable until reconnecting or travelling into a state that
+Foundations policy immediately but may remain castable until reconnecting or travelling into a state that
 rebuilds the game's lock manager. Managed bonus-loadout changes apply immediately. `unmanage` stops
-Foundation from touching the native perks; it does not remove loadouts already granted to the save.
+Foundations from touching the native perks; it does not remove loadouts already granted to the save.
 
 ## Catalog and policy APIs
 

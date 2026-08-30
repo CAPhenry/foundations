@@ -1,6 +1,6 @@
 # hmp-blips
 
-`hmp-blips` is Foundation's authoritative registry for Hogwarts Legacy map, minimap, HUD-compass,
+`hmp-blips` is Foundations's authoritative registry for Hogwarts Legacy map, minimap, HUD-compass,
 search-area, and remote-player markers. Gameplay resources register intent on the server; this
 resource owns the shared native `Blips` keyspace, resolves audiences, and keeps every client converged.
 

@@ -95,7 +95,7 @@ function createAdminUi(options: { admin: AdminService; ui: Ui; banking: Banking;
                 fields: [{
                     name: "query", label: "Item search", required: true,
                     placeholder: "BroomHouse, broom, Wiggenweld, native:galleons…",
-                    description: "Searches friendly names, Foundation names, native IDs, aliases, categories, and holders.",
+                    description: "Searches friendly names, Foundations names, native IDs, aliases, categories, and holders.",
                 }],
                 submitLabel: "Find items",
             });

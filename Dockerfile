@@ -35,8 +35,8 @@ RUN npm run verify
 
 FROM scratch AS pack
 
-LABEL org.opencontainers.image.title="HMP Foundation" \
+LABEL org.opencontainers.image.title="HMP Foundations" \
       org.opencontainers.image.description="Versioned HogwartsMP server resource pack" \
       org.opencontainers.image.licenses="LicenseRef-MafiaHub-OSS"
 
-COPY --from=build /workspace/build/hmp-foundation/ /
+COPY --from=build /workspace/build/hmp-foundations/ /

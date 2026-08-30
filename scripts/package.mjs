@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const resourcesRoot = path.join(root, "resources");
-const outputRoot = path.join(root, "build", "hmp-foundation");
+const outputRoot = path.join(root, "build", "hmp-foundations");
 const outputResources = path.join(outputRoot, "resources");
 const pack = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
 const releaseFiles = ["README.md", "INSTALL.md", "DATABASE.md", "COMPATIBILITY.md", "CHANGELOG.md", "CLOSED_TESTING.md", "LICENSE"];
@@ -43,7 +43,7 @@ for (const entry of await readdir(resourcesRoot, { withFileTypes: true })) {
 }
 
 if (!packaged.length) throw new Error("No hmp-* resources were packaged");
-await writeFile(path.join(outputRoot, "foundation.json"), JSON.stringify({
+await writeFile(path.join(outputRoot, "foundations.json"), JSON.stringify({
     schemaVersion: 1,
     name: pack.name,
     version: pack.version,

@@ -1,6 +1,6 @@
 # hmp-houses
 
-`hmp-houses` is Foundation's character-scoped Hogwarts house and House Cup service. It keeps durable
+`hmp-houses` is Foundations's character-scoped Hogwarts house and House Cup service. It keeps durable
 membership and point history in MySQL, projects membership into `hmp-core` groups, and applies the
 selected character's house through the mod's native `player.house` property.
 
@@ -31,7 +31,7 @@ service:
 3. assigns native `player.house`, causing Hogwarts Legacy to rebuild house-aware robes and crests.
 
 A character without an assignment is synchronized as native `Unaffiliated`, preventing one character's
-house from leaking across a character switch. Clearing membership removes every Foundation-owned
+house from leaking across a character switch. Clearing membership removes every Foundations-owned
 `house:*` projection. Other resources should normally check `hmp-core` groups rather than importing
 this resource just for access control.
 

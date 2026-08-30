@@ -1,6 +1,6 @@
 # hmp-ui
 
-`hmp-ui` is the shared presentation primitive layer for Foundation resources. Its call-site model is intentionally similar to ox_lib: resources ask for a notification, alert, input dialog, context menu or progress operation and receive a normal value or Promise.
+`hmp-ui` is the shared presentation primitive layer for Foundations resources. Its call-site model is intentionally similar to ox_lib: resources ask for a notification, alert, input dialog, context menu or progress operation and receive a normal value or Promise.
 
 The resource owns one browser view and serializes modal work through it. Notifications remain
 unfocused. Dialogs and cancellable progress acquire focus through `Web.focusView()` and hold an

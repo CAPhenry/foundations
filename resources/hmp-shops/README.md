@@ -1,6 +1,6 @@
 # hmp-shops
 
-`hmp-shops` is Foundation's server-authoritative catalog, stock and transaction layer. Gameplay
+`hmp-shops` is Foundations's server-authoritative catalog, stock and transaction layer. Gameplay
 resources register shops; `hmp-shops` supplies interaction prompts, menus, quantity/confirmation
 dialogs, persistent limited stock, currency handling, inventory delivery and an audit ledger.
 

@@ -1,7 +1,7 @@
 # hmp-emotes
 
-`hmp-emotes` is Foundation's server-curated emote system. It migrates the proven HogwartsMP animation
-browser and native playback paths while replacing legacy roles and storage with Foundation groups,
+`hmp-emotes` is Foundations's server-curated emote system. It migrates the proven HogwartsMP animation
+browser and native playback paths while replacing legacy roles and storage with Foundations groups,
 account metadata, MySQL overrides, command routing, rate limits, and input ownership.
 
 HogwartsMP provides two synchronized playback lanes:
@@ -11,7 +11,7 @@ HogwartsMP provides two synchronized playback lanes:
 - Able abilities use `LocalPlayer.playAbility()` and replicate as transient animation edges.
 
 The native layer also replays supported prop and sound notifies, supplies the preview figure, and owns
-exact world placement. Foundation owns names, permissions, favorites, persistence, commands, and UI.
+exact world placement. Foundations owns names, permissions, favorites, persistence, commands, and UI.
 
 ## Configuration
 

@@ -3,7 +3,7 @@
 Shared, dependency-free utilities for HogwartsMP resources. It consolidates the player lookup,
 command routing, input validation, rate limiting, configuration, localization, logging, text,
 number and position helpers that otherwise get reimplemented by every resource. On the client it
-also owns Foundation control leases and arbitrates shortcuts so two eligible resources cannot both
+also owns Foundations control leases and arbitrates shortcuts so two eligible resources cannot both
 react to one physical key edge.
 
 `hmp-lib` deliberately contains no roles, characters, inventory policy or UI. Those belong to
@@ -12,7 +12,7 @@ react to one physical key edge.
 
 ## Distribution
 
-Foundation releases include built server and client bundles. Server owners do not install npm
+Foundations releases include built server and client bundles. Server owners do not install npm
 packages. The shared helpers are available on both sides; `config`, `player` and `command` are
 server-only.
 
@@ -49,7 +49,7 @@ const lease = Hmp.input.controls.acquire({ resource: "hmp-robes", id: "wardrobe"
 lease.release();
 ```
 
-`hmp-lib` holds only one Framework control lock regardless of how many Foundation screens are open.
+`hmp-lib` holds only one Framework control lock regardless of how many Foundations screens are open.
 It releases that lock when the final owner closes. A `resourceStop` removes every lease owned by that
 resource, preventing a crashed or hot-reloaded screen from stranding the cursor and controls. Owners
 are unique `resource + id` pairs; acquiring the same owner twice throws instead of hiding an
@@ -75,8 +75,8 @@ running two gameplay actions. `setEnabled` temporarily disables a registration, 
 physical key, and the disposer or `resourceStop` removes it. The Framework continues to suppress the
 single underlying key handler while chat/CEF owns input or controls are locked.
 
-Raw `Key.bind` remains available for non-Foundation resources, but it does not participate in this
-arbitration. Resources included in the Foundation stack should register through `Hmp.input`.
+Raw `Key.bind` remains available for non-Foundations resources, but it does not participate in this
+arbitration. Resources included in the Foundations stack should register through `Hmp.input`.
 
 ## Commands
 

@@ -30,7 +30,7 @@ function applySync(rawPayload: unknown): void {
         const progression = Progression.setPoints(targetPoints, {
             preserveTalentPoints: payload.preserveTalentPoints !== false,
             source: "HogwartsMP",
-            detail: `Foundation revision ${revision}`,
+            detail: `Foundations revision ${revision}`,
         });
         if (!progression?.accepted) throw new Error("the game rejected the experience snapshot");
         if (!Talents.available()) throw new Error("the talent tree is not ready");

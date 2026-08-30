@@ -1,6 +1,6 @@
 # Changelog
 
-All notable HMP Foundation changes are recorded here. The project uses a lockstep pack version and the
+All notable HMP Foundations changes are recorded here. The project uses a lockstep pack version and the
 pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-policy).
 
 ## [Unreleased]
@@ -64,7 +64,7 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
 ### Added
 
 - `hmp-mysql`, `hmp-lib`, `hmp-ui`, and `hmp-core` as the shared data, utility, UI, account, character,
-  group, metadata, input-ownership, and shortcut foundation.
+  group, metadata, input-ownership, and shortcut foundations.
 - `hmp-characters` and `hmp-spawn` for multicharacter creation, selection, appearance, configured
   spawning, and character-scoped last locations.
 - `hmp-inventory` for custom items, icons, containers, atomic custom-item transfers, and a unified view
