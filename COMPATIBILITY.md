@@ -8,6 +8,7 @@ upstream release identifier.
 |---|---|---|---|
 | HMP Foundations | `0.1.0` pack and resources | Supported | All twenty-three resources must use the same version. |
 | HogwartsMP scripting host | Mod commit `d3275c04` or newer | Closed-test | Pin the eventual upstream release tag before a public Foundations release. |
+| MafiaHub Framework | `16.2.0` or newer | Supported | Required for the `fw://` local resource scheme. On `16.1.x` and older every resource-served page, font, and icon fails to load. |
 | Hogwarts Legacy client data | Steam build ID `20773316` | Supported baseline | The native inventory catalog declares this game-data build. Other builds require revalidation. |
 | Dedicated-server JavaScript | Embedded Node.js 22 runtime | Supported | Release resources contain bundled dependencies. |
 | Source build | Node.js 22 or newer and npm | Supported | `npm ci` followed by `npm run verify`. |
@@ -23,6 +24,8 @@ Until HogwartsMP publishes a stable version that covers Foundations, compatibili
 The host must provide:
 
 - manifest resource dependencies, priorities, exports, and `Imports.get()`;
+- the `fw://resources/<resource>/<file>` local resource scheme, and client asset streaming of the
+  pages, fonts, and icons that resource web views load from it;
 - server and client events, player connect/disconnect, UI messaging, and correlated teleport completion;
 - `Player.location()` and `playerLocationChanged` for coordinate-space-safe spawns, interactions, and administrative teleports;
 - player appearance capture/apply completion for character switching;

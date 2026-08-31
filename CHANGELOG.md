@@ -3,6 +3,31 @@
 All notable HMP Foundations changes are recorded here. The project uses a lockstep pack version and the
 pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-policy).
 
+## [Unreleased]
+
+### Changed
+
+- Resource web views load from the `fw://resources/…` origin instead of `http://resources/…`, following
+  the MafiaHub Framework `16.2.0` local resource scheme. This affects the views in `hmp-characters`,
+  `hmp-emotes`, `hmp-inventory`, `hmp-spawn`, and `hmp-ui`, along with inventory item icons and
+  `hmp-ui` context-menu icons. Paths after the host are unchanged.
+- Foundations now requires MafiaHub Framework `16.2.0` or newer. The `fw://` scheme is not registered on
+  older hosts, so every resource-served page, font, and icon fails to load there.
+
+### Upgrade notes
+
+- Update `ui.url` in any deployed `data/hmp-emotes.json` and `data/hmp-inventory.json` from
+  `http://resources/…` to `fw://resources/…` **before** starting the upgraded server. A stored URL on
+  the old origin is rejected during configuration load, so the resource does not start and its chat
+  commands become silently inert — `/emote menu` simply does nothing. The failure is reported once in
+  the server log as `ui.url must be a resource URL or HTTPS URL`.
+- Update item `icon` URLs in those same files. Unlike `ui.url` these are accepted, but they name a
+  scheme that is no longer served, so affected icons fall back or render broken.
+- Resources staged into the server through a directory junction or symlink must be staged as real
+  copies instead. Framework `16.2.0` streams view assets to clients by walking the resource directory
+  and taking a path relative to the server's resource root; through a link that walk resolves to the
+  real location and escapes the root, so pages and fonts never reach the client asset cache.
+
 ## [0.1.0] - 2026-08-29
 
 ### Added
@@ -89,4 +114,5 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
 - The initial admin resource focuses on moderation and corrective operations; spectate, noclip, and
   god mode are not included.
 
+[Unreleased]: https://github.com/hogwarts-mp/foundations/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/hogwarts-mp/foundations/releases/tag/v0.1.0
