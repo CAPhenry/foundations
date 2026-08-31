@@ -1,12 +1,12 @@
 # HMP Foundations compatibility
 
-This matrix describes Foundations `0.1.0`. “Supported” means the combination is an intended release
+This matrix describes Foundations `0.2.0`. “Supported” means the combination is an intended release
 target. “Closed-test” means it is the current validation baseline but has not yet earned a stable
 upstream release identifier.
 
 | Component | Supported baseline | Status | Notes |
 |---|---|---|---|
-| HMP Foundations | `0.1.0` pack and resources | Supported | All twenty-three resources must use the same version. |
+| HMP Foundations | `0.2.0` pack and resources | Supported | All twenty-three resources must use the same version. |
 | HogwartsMP scripting host | Mod commit `d3275c04` or newer | Closed-test | Pin the eventual upstream release tag before a public Foundations release. |
 | MafiaHub Framework | `16.2.0` or newer | Supported | Required for the `fw://` local resource scheme. On `16.1.x` and older every resource-served page, font, and icon fails to load. |
 | Hogwarts Legacy client data | Steam build ID `20773316` | Supported baseline | The native inventory catalog declares this game-data build. Other builds require revalidation. |
@@ -57,7 +57,7 @@ victim-side green-bolt cosmetic, and target/team writes require the remote proxy
 re-fans complete snapshots for late joiners and exposes `/pvp sync` for recovery; neither caveat weakens
 server arbitration or the duel health floor.
 
-Asynchronous resource lifecycle is not a requirement for Foundations `0.1.0`. The current pack still
+Asynchronous resource lifecycle is not a requirement for Foundations `0.2.0`. The current pack still
 uses the existing synchronous lifecycle and will adopt the asynchronous contract after upstream
 support lands.
 

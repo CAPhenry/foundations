@@ -3,7 +3,7 @@
 All notable HMP Foundations changes are recorded here. The project uses a lockstep pack version and the
 pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-policy).
 
-## [Unreleased]
+## [0.2.0] - 2026-08-30
 
 ### Changed
 
@@ -13,6 +13,7 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
   `hmp-ui` context-menu icons. Paths after the host are unchanged.
 - Foundations now requires MafiaHub Framework `16.2.0` or newer. The `fw://` scheme is not registered on
   older hosts, so every resource-served page, font, and icon fails to load there.
+- Set the pack and every first-party resource to lockstep version `0.2.0`.
 
 ### Upgrade notes
 
@@ -114,5 +115,5 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
 - The initial admin resource focuses on moderation and corrective operations; spectate, noclip, and
   god mode are not included.
 
-[Unreleased]: https://github.com/hogwarts-mp/foundations/compare/v0.1.0...HEAD
+[0.2.0]: https://github.com/hogwarts-mp/foundations/releases/tag/v0.2.0
 [0.1.0]: https://github.com/hogwarts-mp/foundations/releases/tag/v0.1.0
