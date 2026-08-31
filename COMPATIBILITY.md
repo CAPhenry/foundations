@@ -6,7 +6,7 @@ upstream release identifier.
 
 | Component | Supported baseline | Status | Notes |
 |---|---|---|---|
-| HMP Foundations | `0.2.0` pack and resources | Supported | All twenty-three resources must use the same version. |
+| HMP Foundations | `0.2.0` pack and resources | Supported | All twenty-four resources must use the same version. |
 | HogwartsMP scripting host | Mod commit `d3275c04` or newer | Closed-test | Pin the eventual upstream release tag before a public Foundations release. |
 | MafiaHub Framework | `16.2.0` or newer | Supported | Required for the `fw://` local resource scheme. On `16.1.x` and older every resource-served page, font, and icon fails to load. |
 | Hogwarts Legacy client data | Steam build ID `20773316` | Supported baseline | The native inventory catalog declares this game-data build. Other builds require revalidation. |
@@ -51,6 +51,8 @@ The host must provide:
   availability, point, purchase, grant, level, removal, refund, and reset operations.
 - server `Pvp` hit policy, live-health `minHp` floors and vitals view; client mutual targetability,
   team relationships, duel context, opponent meter, damage immunity and near-death kneel controls.
+- server `NPC.create`, NPC mutation/destruction, `NPCManager`, and `npcDied` events using the verified
+  enemy identifiers documented by `hmp-npcs`.
 
 The current PvP host has two presentation caveats: relayed Killing Curse hits do not reproduce the
 victim-side green-bolt cosmetic, and target/team writes require the remote proxy to be streamed. Foundations

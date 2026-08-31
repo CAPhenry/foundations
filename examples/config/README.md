@@ -11,6 +11,7 @@ server-specific banks, jobs, interactions, and shops belong in a separate gamepl
 `hmp-doors` includes a file-backed example because physical-door access is a server-wide world policy.
 `hmp-world` includes the baseline weather, clock, date, season, mount-boundary, ambient-population, and
 native-encounter policy applied to every client.
+`hmp-npcs` includes total and per-resource limits for NPCs managed through the Foundation service.
 `hmp-emotes` includes one for curated aliases, editor groups, the `allowAll` catalog policy, and renderer selection.
 `hmp-audio` includes one for Wwise aliases, positional range, handle limits, and closed-test commands.
 `hmp-blips` includes one for marker lifetimes, player visibility, native tint/scale, and private probes.

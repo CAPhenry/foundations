@@ -3,6 +3,13 @@
 All notable HMP Foundations changes are recorded here. The project uses a lockstep pack version and the
 pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-policy).
 
+## [Unreleased]
+
+### Added
+
+- `hmp-npcs` as the Foundation-owned, Framework-verified enemy catalog and resource-scoped NPC spawn,
+  ownership, limit, death-tracking, and cleanup service.
+
 ## [0.2.0] - 2026-08-30
 
 ### Changed

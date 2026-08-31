@@ -188,6 +188,37 @@ declare global {
         location?(): HogwartsMpPlayerLocation | null;
     }
 
+    interface HogwartsMpNpc {
+        readonly id: number;
+        readonly enemyId: string;
+        readonly disposition: "hostile" | "friendly" | undefined;
+        readonly alive: boolean;
+        readonly ownerId?: number;
+        readonly scale: number;
+        readonly health: number;
+        readonly maxHealth: number;
+        setScale(scale: number): void;
+        setMaxHealth(health: number): void;
+        setHealth(health: number): void;
+        destroy(): void;
+        kill(): void;
+        setDisposition(disposition: "hostile" | "friendly"): void;
+        forceTarget(playerId: number, holdSeconds?: number, applyTicks?: number): void;
+    }
+
+    const NPC: {
+        new(id: number): HogwartsMpNpc;
+        create(
+            enemyId: string,
+            x: number,
+            y: number,
+            z: number,
+            disposition?: "hostile" | "friendly",
+            preferredOwnerId?: number,
+        ): HogwartsMpNpc | undefined;
+    };
+    const NPCManager: { getAll(): HogwartsMpNpc[] };
+
     interface HogwartsMpEvents {
         on(eventName: "chatCommand", listener: (player: HogwartsMpPlayer, message: string, command: string, args: string[]) => unknown): void;
         on(eventName: "playerConnect" | "playerDisconnect" | "worldReady", listener: (player: HogwartsMpPlayer) => unknown): void;
@@ -319,6 +350,7 @@ declare global {
         get(name: "hmp-activities"): import("../resources/hmp-activities/types").HmpActivities<HogwartsMpPlayer>;
         get(name: "hmp-pvp"): import("../resources/hmp-pvp/types").HmpPvp<HogwartsMpPlayer>;
         get(name: "hmp-duels"): import("../resources/hmp-duels/types").HmpDuels<HogwartsMpPlayer>;
+        get(name: "hmp-npcs"): import("../resources/hmp-npcs/types").HmpNpcs;
         get<T = unknown>(name: string): T;
     };
     const PlayerManager: {

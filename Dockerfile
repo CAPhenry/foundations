@@ -21,6 +21,7 @@ COPY resources/hmp-inventory/package.json resources/hmp-inventory/package.json
 COPY resources/hmp-jobs/package.json resources/hmp-jobs/package.json
 COPY resources/hmp-lib/package.json resources/hmp-lib/package.json
 COPY resources/hmp-mysql/package.json resources/hmp-mysql/package.json
+COPY resources/hmp-npcs/package.json resources/hmp-npcs/package.json
 COPY resources/hmp-progression/package.json resources/hmp-progression/package.json
 COPY resources/hmp-pvp/package.json resources/hmp-pvp/package.json
 COPY resources/hmp-shops/package.json resources/hmp-shops/package.json
