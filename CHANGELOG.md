@@ -26,6 +26,20 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
   rule degrades closed rather than open, but path selectors match nothing and `/doors lock` fails, so
   keep those rules out of a deployment until its clients are updated.
 
+### Fixed
+
+- `hmp-core`'s `selectCharacter()` now emits `hmp:character:selected` for every successful
+  selection, not only when reached through `hmp-characters`' `select()` wrapper. Previously,
+  `autoSelectSingleCharacter` bypassed the event entirely, silently breaking every resource gated
+  behind it (`hmp-spawn`'s teleport, last-location persistence, and autosave tracking, with no
+  error anywhere).
+- `hmp-characters`' `tryInitialOpen` now skips opening when a character is already active, and
+  only marks itself "attempted" after a successful open instead of before -- a transient failure
+  no longer permanently disables auto-open for the rest of a session.
+- `hmp-characters` and `hmp-spawn` no longer gate their auto-open/auto-spawn flow behind a custom
+  client-emitted "ready" ping, which was unreliable in practice. Both now use the native
+  `loadingFinished` event instead.
+
 ## [0.2.0] - 2026-08-30
 
 ### Changed
