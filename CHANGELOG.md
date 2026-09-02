@@ -5,8 +5,11 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-02
+
 ### Changed
 
+- Set the pack, all twenty-four resources, and internal dependency pins to lockstep version `0.3.0`.
 - All twenty-four resource manifests now use `serverScripts` and `clientScripts` lists, following
   HogwartsMP mod commit `b85eecf409c59179ef836d613b3a3766f01ed593`. Client resources explicitly declare
   their built client bundle and supporting pages, fonts, icons, and emote catalog in `mafiahub.files`.
@@ -41,20 +44,6 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
   `0 / N slots` and `0.0 / N weight` even with items visible. The custom-container weight cap enforced
   on `inventory.add` is unchanged.
 
-### Upgrade notes
-
-- In existing `data/hmp-spawn.json` files, change the castle-grounds destination's `areaId` from
-  `"Hogwarts"` to `"Overland"`, then restart the server and reconnect. Existing configuration files
-  are not replaced automatically by a pack update.
-- Update the HogwartsMP server and clients together with the matching Framework support for script
-  roles and resource containers before installing this pack. Older loaders that only understand
-  `server` / `client` entries cannot start these manifests. Existing `fw://resources/…` URLs are unchanged.
-- The `hmp-doors` lock and path features need a newer HogwartsMP client. Against an older one a `lock`
-  rule degrades closed rather than open, but path selectors match nothing and `/doors lock` fails, so
-  keep those rules out of a deployment until its clients are updated.
-
-### Fixed
-
 - `hmp-core`'s `selectCharacter()` now emits `hmp:character:selected` for every successful
   selection, not only when reached through `hmp-characters`' `select()` wrapper. Previously,
   `autoSelectSingleCharacter` bypassed the event entirely, silently breaking every resource gated
@@ -66,6 +55,18 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
 - `hmp-characters` and `hmp-spawn` no longer gate their auto-open/auto-spawn flow behind a custom
   client-emitted "ready" ping, which was unreliable in practice. Both now use the native
   `loadingFinished` event instead.
+
+### Upgrade notes
+
+- In existing `data/hmp-spawn.json` files, change the castle-grounds destination's `areaId` from
+  `"Hogwarts"` to `"Overland"`, then restart the server and reconnect. Existing configuration files
+  are not replaced automatically by a pack update.
+- Update the HogwartsMP server and clients together with the matching Framework support for script
+  roles and resource containers before installing this pack. Older loaders that only understand
+  `server` / `client` entries cannot start these manifests. Existing `fw://resources/…` URLs are unchanged.
+- The `hmp-doors` lock and path features need a newer HogwartsMP client. Against an older one a `lock`
+  rule degrades closed rather than open, but path selectors match nothing and `/doors lock` fails, so
+  keep those rules out of a deployment until its clients are updated.
 
 ## [0.2.0] - 2026-08-30
 
@@ -179,5 +180,6 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
 - The initial admin resource focuses on moderation and corrective operations; spectate, noclip, and
   god mode are not included.
 
+[0.3.0]: https://github.com/hogwarts-mp/foundations/releases/tag/v0.3.0
 [0.2.0]: https://github.com/hogwarts-mp/foundations/releases/tag/v0.2.0
 [0.1.0]: https://github.com/hogwarts-mp/foundations/releases/tag/v0.1.0
