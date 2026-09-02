@@ -9,6 +9,20 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
 
 - `hmp-npcs` as the Foundation-owned, Framework-verified enemy catalog and resource-scoped NPC spawn,
   ownership, limit, death-tracking, and cleanup service.
+- `hmp-doors` gains an `action: "lock"` rule that actively locks a physical door, where `deny` only
+  withholds an unlock. `lock` beats `deny` and `allow` at an equal priority; a character grant beats
+  `lock`. It is rejected on `locks` and `alohomora` targets and on `"*"`.
+- `hmp-doors` rules may target a door by asset path: a `doors` entry containing `/` or `:` matches the
+  path rather than the actor name. Names are `FName`s that streamed sublevels repeat, so a name-based
+  rule applies to every placement carrying it.
+- `hmp-doors` diagnostics for finding those paths — `/doors label`, a chat echo of the nearest doors from
+  `/doors list`, and `/doors lock|unlock <name|path>`, which reports how many doors matched.
+
+### Upgrade notes
+
+- The `hmp-doors` lock and path features need a newer HogwartsMP client. Against an older one a `lock`
+  rule degrades closed rather than open, but path selectors match nothing and `/doors lock` fails, so
+  keep those rules out of a deployment until its clients are updated.
 
 ## [0.2.0] - 2026-08-30
 
