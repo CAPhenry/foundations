@@ -57,6 +57,25 @@ Resource implementations are strict TypeScript under each resource's `server/`, 
 JavaScript for browser clients) under `dist/`; runtime manifests continue to reference those generated
 JavaScript files. Source-level unit tests use `tsx`, while smoke tests execute the compiled bundles.
 
+Resource manifests declare ordered `mafiahub.serverScripts` and `mafiahub.clientScripts` lists.
+Client resources also declare `mafiahub.files` for the generated bundle and any pages, fonts, icons,
+or data they need. For example, `hmp-inventory` uses:
+
+```json
+"mafiahub": {
+  "serverScripts": ["dist/server.js"],
+  "clientScripts": ["dist/client.js"],
+  "files": ["dist/client.js", "dist/index.html", "dist/fonts/**", "dist/icons/**"]
+}
+```
+
+The host streams `clientScripts`, optional `sharedScripts` (which execute on both sides),
+`package.json`, and the assets selected by `files` to clients. Keep these paths relative to the
+resource root and point them at built files under `dist/`. Client dependencies are bundled into
+`dist/client.js`; avoid `dist/**` or `dist/*.js` because server bundles share that directory.
+Resources with only `serverScripts` have no client package. Client assets retain their
+`fw://resources/<resource>/<file>` URLs with the new resource containers.
+
 `npm run package` writes a ready-to-load pack under `build/hmp-foundations/resources/`. Runtime
 artifacts contain bundled dependencies: server owners do not run npm inside the game-server image.
 

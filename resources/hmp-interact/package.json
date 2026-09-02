@@ -17,10 +17,15 @@
     "typescript": "5.9.3"
   },
   "mafiahub": {
-    "server": "dist/server.js",
-    "client": "dist/client.js",
-    "priority": -450,
-    "errorBehavior": "stop",
+    "serverScripts": [
+      "dist/server.js"
+    ],
+    "clientScripts": [
+      "dist/client.js"
+    ],
+    "files": [
+      "dist/client.js"
+    ],
     "exports": [
       "register",
       "unregister",
@@ -36,6 +41,8 @@
       { "name": "hmp-core", "version": "0.2.0" },
       { "name": "hmp-inventory", "version": "0.2.0" },
       { "name": "hmp-ui", "version": "0.2.0" }
-    ]
+    ],
+    "errorBehavior": "stop",
+    "priority": -450
   }
 }

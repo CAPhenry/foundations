@@ -5,6 +5,16 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
 
 ## [Unreleased]
 
+### Changed
+
+- All twenty-four resource manifests now use `serverScripts` and `clientScripts` lists, following
+  HogwartsMP mod commit `b85eecf409c59179ef836d613b3a3766f01ed593`. Client resources explicitly declare
+  their built client bundle and supporting pages, fonts, icons, and emote catalog in `mafiahub.files`.
+  Fields follow the consistent ordering from mod commit `5d99c52f033a5d1b1748ea56a8842b89c33c7987`,
+  with scripts and files first and priority last.
+- The release check validates the new manifest fields and uses client/shared script lists when
+  checking the client dependency graph.
+
 ### Added
 
 - `hmp-characters` restores the four cosmetic gear items that vanilla grants during `WEK_01` when a
@@ -29,6 +39,9 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
 
 ### Upgrade notes
 
+- Update the HogwartsMP server and clients together with the matching Framework support for script
+  roles and resource containers before installing this pack. Older loaders that only understand
+  `server` / `client` entries cannot start these manifests. Existing `fw://resources/…` URLs are unchanged.
 - The `hmp-doors` lock and path features need a newer HogwartsMP client. Against an older one a `lock`
   rule degrades closed rather than open, but path selectors match nothing and `/doors lock` fails, so
   keep those rules out of a deployment until its clients are updated.

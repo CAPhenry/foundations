@@ -19,6 +19,10 @@ async function json(file) {
     return JSON.parse(await readFile(path.join(root, file), "utf8"));
 }
 
+function hasClientScripts(manifest) {
+    return Boolean(manifest.mafiahub.clientScripts?.length || manifest.mafiahub.sharedScripts?.length);
+}
+
 const pack = await json("package.json");
 if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(pack.version)) throw new Error(`Invalid pack version '${pack.version}'`);
 
@@ -39,6 +43,21 @@ for (const entry of entries) {
     if (manifest.name !== entry.name) throw new Error(`${entry.name} manifest name is '${manifest.name}'`);
     if (manifest.version !== pack.version) throw new Error(`${entry.name} is ${manifest.version}; expected ${pack.version}`);
     if (!manifest.mafiahub) throw new Error(`${entry.name} has no mafiahub manifest`);
+    const roles = manifest.mafiahub;
+    if ("server" in roles || "client" in roles) {
+        throw new Error(`${entry.name} must use serverScripts/clientScripts instead of legacy server/client entries`);
+    }
+    for (const field of ["serverScripts", "clientScripts", "sharedScripts", "files"]) {
+        if (field in roles && (!Array.isArray(roles[field]) || roles[field].some((file) => typeof file !== "string" || !file.trim()))) {
+            throw new Error(`${entry.name} mafiahub.${field} must be an array of non-empty paths`);
+        }
+    }
+    if (!roles.serverScripts?.length && !hasClientScripts(manifest)) {
+        throw new Error(`${entry.name} has no scripts`);
+    }
+    if (hasClientScripts(manifest) && !Array.isArray(roles.files)) {
+        throw new Error(`${entry.name} must declare mafiahub.files to control client asset packaging`);
+    }
     manifests.set(entry.name, manifest);
 }
 if (!manifests.size) throw new Error("No hmp-* resources found");
@@ -62,9 +81,9 @@ for (const [name, manifest] of manifests) {
         }
         return dependency.name;
     });
-    if (manifest.mafiahub.client) {
+    if (hasClientScripts(manifest)) {
         for (const dependency of normalized) {
-            if (!manifests.get(dependency).mafiahub.client) {
+            if (!hasClientScripts(manifests.get(dependency))) {
                 throw new Error(`${name} has a client entry but dependency ${dependency} does not; the shared Framework dependency graph would reject the client resource set`);
             }
         }

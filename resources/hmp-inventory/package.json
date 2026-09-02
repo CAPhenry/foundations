@@ -17,10 +17,18 @@
     "typescript": "5.9.3"
   },
   "mafiahub": {
-    "server": "dist/server.js",
-    "client": "dist/client.js",
-    "priority": -725,
-    "errorBehavior": "stop",
+    "serverScripts": [
+      "dist/server.js"
+    ],
+    "clientScripts": [
+      "dist/client.js"
+    ],
+    "files": [
+      "dist/client.js",
+      "dist/index.html",
+      "dist/fonts/**",
+      "dist/icons/**"
+    ],
     "exports": [
       "items",
       "inventory",
@@ -34,6 +42,8 @@
       { "name": "hmp-mysql", "version": "0.2.0" },
       { "name": "hmp-core", "version": "0.2.0" },
       { "name": "hmp-lib", "version": "0.2.0" }
-    ]
+    ],
+    "errorBehavior": "stop",
+    "priority": -725
   }
 }

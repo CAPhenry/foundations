@@ -17,9 +17,9 @@
     "typescript": "5.9.3"
   },
   "mafiahub": {
-    "server": "dist/server.js",
-    "priority": -300,
-    "errorBehavior": "stop",
+    "serverScripts": [
+      "dist/server.js"
+    ],
     "exports": ["permissions", "players", "actions", "moderation", "audit", "ui", "status"],
     "resourceDependencies": [
       { "name": "hmp-mysql", "version": "0.2.0" },
@@ -29,6 +29,8 @@
       { "name": "hmp-inventory", "version": "0.2.0" },
       { "name": "hmp-banking", "version": "0.2.0" },
       { "name": "hmp-jobs", "version": "0.2.0" }
-    ]
+    ],
+    "errorBehavior": "stop",
+    "priority": -300
   }
 }

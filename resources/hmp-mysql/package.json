@@ -20,10 +20,15 @@
     "typescript": "5.9.3"
   },
   "mafiahub": {
-    "server": "dist/main.js",
-    "client": "dist/client.js",
-    "priority": -1000,
-    "errorBehavior": "stop",
+    "serverScripts": [
+      "dist/main.js"
+    ],
+    "clientScripts": [
+      "dist/client.js"
+    ],
+    "files": [
+      "dist/client.js"
+    ],
     "exports": [
       "query",
       "prepare",
@@ -35,6 +40,8 @@
       "migrate",
       "ready",
       "status"
-    ]
+    ],
+    "errorBehavior": "stop",
+    "priority": -1000
   }
 }
