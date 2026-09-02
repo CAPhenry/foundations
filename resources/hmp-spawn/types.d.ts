@@ -49,6 +49,8 @@ export interface HmpSpawnUiModel {
     character: { id: number; name: string };
     locations: HmpSpawnLocationInfo[];
     defaultLocation: string;
+    /** Explanation shown when no destinations are currently available. */
+    emptyMessage?: string;
 }
 
 export interface HmpSpawnUiApi<P extends HmpSpawnPlayer = HmpSpawnPlayer> {

@@ -32,6 +32,10 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
 
 ### Fixed
 
+- `hmp-spawn` uses the actual `Overland` world for the default and example Hogwarts destination.
+  The example's former `areaId: "Hogwarts"` hid the only destination and left the selector blank.
+  The selector now refreshes when location context arrives or changes, explains when no destinations
+  are available, and ignores late refreshes after spawning starts or the player disconnects.
 - `hmp-inventory` now counts native (in-game) holdings in the inventory view's `usedSlots` and `weight`,
   so the bundled UI header reflects everything on screen. A character carrying only game items showed
   `0 / N slots` and `0.0 / N weight` even with items visible. The custom-container weight cap enforced
@@ -39,6 +43,9 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
 
 ### Upgrade notes
 
+- In existing `data/hmp-spawn.json` files, change the castle-grounds destination's `areaId` from
+  `"Hogwarts"` to `"Overland"`, then restart the server and reconnect. Existing configuration files
+  are not replaced automatically by a pack update.
 - Update the HogwartsMP server and clients together with the matching Framework support for script
   roles and resource containers before installing this pack. Older loaders that only understand
   `server` / `client` entries cannot start these manifests. Existing `fw://resources/…` URLs are unchanged.

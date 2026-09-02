@@ -39,7 +39,7 @@ Optional `data/hmp-spawn.json`:
       "key": "hogwarts",
       "label": "Hogwarts",
       "description": "Return to the castle grounds.",
-      "areaId": "Hogwarts",
+      "areaId": "Overland",
       "x": 366784,
       "y": -461527,
       "z": -82610,
@@ -61,6 +61,10 @@ Set `areaId` (and optionally `regionId`) on configured destinations. Scoped dest
 only while the player is in that game-authored coordinate space. Saved locations retain this context
 and are not offered as same-area teleports from a different map. During world travel,
 `playerLocationChanged` supplies the last valid snapshot before location becomes unavailable.
+
+`areaId` is the game's world/map name: the castle grounds use `Overland`, not `Hogwarts`.
+The selector refreshes when location context arrives or changes. While context is unavailable it
+shows a waiting message; if the current area has no destinations it explains that none are configured.
 
 ## Exports
 

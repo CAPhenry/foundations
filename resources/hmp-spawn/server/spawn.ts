@@ -92,6 +92,7 @@ function createSpawnFlow(options: SpawnFlowOptions) {
     const spawnedCharacter = new Map<number, number>();
     const loadingDone = new Set<number>();
     const queuedSelection = new Map<number, CharacterSelectionPayload>();
+    const selectorRequests = new Map<number, symbol>();
 
     for (const location of config.locations || []) register({ ...location, resource: "hmp-spawn" });
     if (!locations.has(String(config.defaultLocation || "").toLowerCase())) {
@@ -210,13 +211,25 @@ function createSpawnFlow(options: SpawnFlowOptions) {
 
     async function open(player: Player): Promise<HmpSpawnUiModel> {
         const { character } = sessionAndCharacter(player);
+        const playerId = idOf(player);
+        const request = Symbol();
+        selectorRequests.set(playerId, request);
         const choices = await available(player);
-        const payload = {
+        const current = playerLocation(player);
+        const payload: HmpSpawnUiModel = {
             character: { id: character.id, name: character.name },
             locations: choices,
             defaultLocation: String(config.defaultLocation),
+            ...(choices.length ? {} : {
+                emptyMessage: current
+                    ? "No destinations are configured for your current area. Please contact the server administrator."
+                    : "Waiting for your current area to load. Destinations will appear automatically.",
+            }),
         };
-        send(player, "hmp-spawn:open", payload);
+        // Location reports can race selection, disconnects, or newer refreshes while metadata loads.
+        if (selectorRequests.get(playerId) === request && core.characters.active(player)?.id === character.id) {
+            send(player, "hmp-spawn:open", payload);
+        }
         return payload;
     }
 
@@ -249,7 +262,9 @@ function createSpawnFlow(options: SpawnFlowOptions) {
     }
 
     async function locationChanged(player: Player, current: HogwartsMpPlayerLocation | null, previous: HogwartsMpPlayerLocation | null): Promise<boolean> {
-        return saveSnapshot(player, current || previous);
+        const saved = await saveSnapshot(player, current || previous);
+        if (selectorRequests.has(idOf(player))) await open(player);
+        return saved;
     }
 
     function clearPending(context?: SpawnContext | null): void {
@@ -271,6 +286,7 @@ function createSpawnFlow(options: SpawnFlowOptions) {
         if (pendingByPlayer.has(playerId)) throw spawnError("HMP_SPAWN_IN_PROGRESS", "A spawn is already in progress");
         const { session, character } = sessionAndCharacter(player);
         const location = await resolve(player, destination);
+        selectorRequests.delete(playerId);
         send(player, "hmp-spawn:transition", { location: publicLocation(location, location.key === "last" ? "last" : "configured") });
         let requestId: number;
         try {
@@ -350,6 +366,7 @@ function createSpawnFlow(options: SpawnFlowOptions) {
         if (!player) return false;
         const id = idOf(player);
         spawnedCharacter.delete(id);
+        selectorRequests.delete(id);
         if (!loadingDone.has(id)) {
             queuedSelection.set(id, payload);
             return false;
@@ -389,6 +406,7 @@ function createSpawnFlow(options: SpawnFlowOptions) {
         loadingDone.delete(id);
         queuedSelection.delete(id);
         spawnedCharacter.delete(id);
+        selectorRequests.delete(id);
     }
 
     const locationApi = Object.freeze({

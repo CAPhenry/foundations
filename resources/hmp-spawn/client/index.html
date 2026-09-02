@@ -72,7 +72,7 @@
 
       function render() {
         document.getElementById("character").textContent = `Entering the world as ${model.character?.name || "your character"}`;
-        error.textContent = "";
+        error.textContent = model.locations?.length ? "" : (model.emptyMessage || "No destinations are currently available. Please contact the server administrator.");
         list.textContent = "";
         for (const location of model.locations || []) {
           const button = document.createElement("button");

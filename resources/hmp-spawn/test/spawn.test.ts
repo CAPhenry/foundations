@@ -1,7 +1,11 @@
 import assert = require("node:assert");
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import configModule = require("../server/config");
 import spawnModule = require("../server/spawn");
 import type { HmpCoreCharacter, HmpCoreSession } from "../../hmp-core/types";
+import type { HmpLibServer } from "../../hmp-lib/types";
 import type { Core, Player, SpawnConfig, TimerHandle } from "../server/internal";
 
 const { createSpawnFlow, normalizeLocation, LAST_LOCATION_KEY } = spawnModule;
@@ -71,6 +75,74 @@ function setup(overrides: Partial<SpawnConfig> = {}) {
     });
     return { flow, core, config, player, character, session, metadata, timers, clientEvents, emitted };
 }
+
+function overlandLocation(player: TestPlayer): HogwartsMpPlayerLocation {
+    return { areaId: "Overland", regionId: "Hogwarts", destinationId: null, ...player.position, yaw: 90, revision: 1 };
+}
+
+test("default and example Hogwarts destinations are available in the actual Overland world", async () => {
+    const defaults = configModule.loadConfig({
+        config: { load: (_path: string, options: { defaults: SpawnConfig }) => options.defaults },
+    } as unknown as HmpLibServer<Player>, { env: {} });
+    const example = JSON.parse(readFileSync(resolve(__dirname, "../../../examples/config/data/hmp-spawn.json"), "utf8")) as SpawnConfig;
+    for (const config of [defaults, example]) {
+        const { flow, player } = setup(config);
+        player.location = () => overlandLocation(player);
+        assert.deepStrictEqual((await flow.ui.open(player)).locations.map((location) => location.key), ["hogwarts"]);
+        assert.strictEqual(await flow.select(player, "hogwarts"), 40);
+        player.location = () => ({ ...overlandLocation(player), areaId: "Gringotts" });
+        assert.deepStrictEqual((await flow.ui.open(player)).locations, []);
+    }
+});
+
+test("refreshes an empty selector when the first location report arrives without saving the staging position", async () => {
+    const { flow, player, clientEvents, metadata } = setup({
+        locations: [{ key: "hogwarts", label: "Hogwarts", areaId: "Overland", x: 366784, y: -461527, z: -82610 }],
+    });
+    player.location = () => null;
+    const initial = await flow.ui.open(player);
+    assert.deepStrictEqual(initial.locations, []);
+    assert.match(initial.emptyMessage || "", /Waiting/);
+
+    const current = overlandLocation(player);
+    player.location = () => current;
+    assert.strictEqual(await flow.locationChanged(player, current, null), false);
+    const refreshed = clientEvents.at(-1)!;
+    assert.strictEqual(refreshed.name, "hmp-spawn:open");
+    assert.deepStrictEqual((refreshed.payload.locations as Array<{ key: string }>).map((location) => location.key), ["hogwarts"]);
+    assert.strictEqual(refreshed.payload.emptyMessage, undefined);
+    assert.strictEqual(metadata.size, 0);
+});
+
+test("explains an area mismatch and continues rejecting unsafe destinations", async () => {
+    const { flow, player } = setup({
+        locations: [{ key: "hogwarts", label: "Hogwarts", areaId: "Overland", x: 366784, y: -461527, z: -82610 }],
+    });
+    player.location = () => ({ ...overlandLocation(player), areaId: "Gringotts" });
+    const model = await flow.ui.open(player);
+    assert.deepStrictEqual(model.locations, []);
+    assert.match(model.emptyMessage || "", /No destinations are configured/);
+    await assert.rejects(flow.select(player, "hogwarts"), /different game area/);
+    assert.strictEqual(player.teleported, undefined);
+});
+
+test("a slow selector refresh cannot reopen the screen after spawning or disconnecting", async () => {
+    for (const action of ["spawn", "disconnect"]) {
+        const { flow, core, player, clientEvents } = setup();
+        player.location = () => overlandLocation(player);
+        await flow.ui.open(player);
+        let releaseMetadata!: () => void;
+        core.metadata.getCharacter = () => new Promise((resolve) => { releaseMetadata = () => resolve(undefined); });
+        const refresh = flow.ui.open(player);
+        if (action === "spawn") await flow.select(player, "hogwarts");
+        else flow.disconnect(player);
+        const before = clientEvents.length;
+        releaseMetadata();
+        await refresh;
+        await flow.locationChanged(player, overlandLocation(player), null);
+        assert.strictEqual(clientEvents.length, before);
+    }
+});
 
 test("validates locations and protects configured defaults", () => {
     assert.throws(() => normalizeLocation({ key: "bad key", x: 0, y: 0, z: 0 }), /Spawn key/);

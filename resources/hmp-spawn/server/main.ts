@@ -29,7 +29,7 @@ Events.on("hmp:character:unloading", (payload: unknown) => {
     return flow.save(value.session.player, value.character).catch((error: unknown) => logger.warn(`Could not save location: ${messageOf(error)}`));
 });
 Events.on("playerTeleportComplete", (player: unknown, requestId: unknown, status: unknown, completion: unknown) => flow.complete(player as Player, requestId, status, completion).catch((error: unknown) => logger.error(`Spawn completion failed: ${messageOf(error)}`)));
-Events.on("playerLocationChanged", (player: Player, current: HogwartsMpPlayerLocation | null, previous: HogwartsMpPlayerLocation | null) => flow.locationChanged(player, current, previous).catch((error: unknown) => logger.warn(`Could not save location context: ${messageOf(error)}`)));
+Events.on("playerLocationChanged", (player: Player, current: HogwartsMpPlayerLocation | null, previous: HogwartsMpPlayerLocation | null) => flow.locationChanged(player, current, previous).catch((error: unknown) => logger.warn(`Could not update spawn location context: ${messageOf(error)}`)));
 Events.on("hmp:session:ended", (session: unknown) => flow.disconnect((session as HmpCoreSession<Player>).player));
 Events.on("resourceStop", (name: unknown) => {
     if (name && name !== "hmp-spawn") return flow.removeForResource(name as string);

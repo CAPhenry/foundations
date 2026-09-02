@@ -16,6 +16,7 @@ function loadConfig(Hmp: HmpLibServer<Player>, options: { env?: NodeJS.ProcessEn
                 key: "hogwarts",
                 label: "Hogwarts",
                 description: "Return to the castle grounds.",
+                areaId: "Overland",
                 x: 366784,
                 y: -461527,
                 z: -82610,
