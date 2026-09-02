@@ -1,16 +1,19 @@
 import configModule = require("./config");
 import charactersModule = require("./characters");
+import startingGearModule = require("./starting-gear");
 import type { HmpCoreSession } from "../../hmp-core/types";
 import type { CharacterEventPayload, CharacterNameInput, Player } from "./internal";
 
 const { loadConfig } = configModule;
 const { createCharacterFlow } = charactersModule;
+const { createStartingGearGrant } = startingGearModule;
 
 const Hmp = Imports.get("hmp-lib");
 const core = Imports.get("hmp-core");
 const logger = Hmp.logger.create("hmp-characters");
 const config = loadConfig(Hmp);
 const flow = createCharacterFlow({ core, events: Events, logger, config });
+const startingGear = createStartingGearGrant(config.startingGear);
 const actions = Hmp.rateLimit.create<number>({ limit: 8, windowMs: 2000 });
 
 const ui = Object.freeze({ open: flow.open, close: flow.close });
@@ -29,6 +32,17 @@ Events.on("hmp:session:ready", (session: unknown) => {
     flow.onSessionReady(value).catch((error: unknown) => flow.notifyError(value.player, error));
 });
 Events.on("hmp:character:loading", (payload: unknown) => flow.applyAppearance(payload as CharacterEventPayload));
+Events.on("hmp:character:created", (payload: unknown) => startingGear.created(payload as CharacterEventPayload));
+Events.on("hmp:character:loaded", async (payload: unknown) => {
+    const value = payload as CharacterEventPayload;
+    try { await startingGear.loaded(value); }
+    catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        logger.error(`Could not grant starting gear to character ${value?.character?.id}: ${message}`);
+        flow.notifyError(value?.session?.player, new Error("Your character was saved, but their starting gear could not be granted. Please reconnect or contact a server administrator."));
+    }
+});
+Events.on("hmp:character:deleted", (payload: unknown) => startingGear.deleted(payload as CharacterEventPayload));
 Events.on("playerAppearanceChanged", (player: unknown, blob: unknown, revision: unknown) => {
     flow.onAppearanceChanged(player as Player, blob, revision).catch((error: unknown) => flow.notifyError(player as Player, error));
 });

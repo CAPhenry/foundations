@@ -19,7 +19,7 @@
   "mafiahub": {
     "server": "dist/server.js",
     "client": "dist/client.js",
-    "priority": -500,
+    "priority": -725,
     "errorBehavior": "stop",
     "exports": [
       "items",

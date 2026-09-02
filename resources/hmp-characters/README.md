@@ -13,7 +13,8 @@ falls back to character initials instead of blocking selection.
 
 - `hmp-core` owns character IDs, slots, account ownership and lifecycle.
 - `hmp-characters` owns the selection UI and the `appearance`/`transmog` character metadata keys.
-- Future inventory, housing, progression and location resources own their own character-keyed data.
+- `hmp-inventory` owns character-keyed inventory data; this resource asks it to restore the vanilla starting gear when a character is created.
+- Future housing, progression and location resources own their own character-keyed data.
 
 There is no second character database and no nickname-as-identity fallback.
 
@@ -54,6 +55,27 @@ A custody, combat or other policy resource may set `allow = false` and provide a
 
 After a successful selection it emits `hmp:character:selected` with `{ session, character }`.
 
+## Starting gear
+
+The base game silently and unconditionally grants four cosmetic `_Basic` gear items during the first
+main quest, `WEK_01` (Walking With Weasley). HogwartsMP enters through
+`FreerideLoader::TryAutoLoad()` and never runs that mission, so a new multiplayer character would
+otherwise be missing all four items. `startingGear` restores that vanilla grant; it is not a server
+perk. The items are identified but left unworn by default, matching vanilla and avoiding stat or
+balance changes.
+
+The unworn default also keeps the character creator's glasses choice understandable. The creator's
+“no glasses” option removes a forced appearance override; it does not hide the face slot. If real
+glasses are equipped underneath, choosing “no glasses” therefore reveals those equipped glasses.
+That is correct and matches vanilla, where the creator runs before the player owns items. The real
+hide mechanism is `GA_Face_Hidden`, but it must not be attached to the creator's “none” choice: doing
+so would remain as an override and hide face gear acquired later.
+
+The grant is queued by `hmp:character:created` and applied after `hmp:character:loaded`, once the
+correct character inventory has been restored. The native inventory catalog routes each item to its
+declared holder (`CostumeStorage` for face gear), and the grant waits for native application so a
+holder or item error is reported instead of looking like a silent success.
+
 ## Configuration
 
 Optional `data/hmp-characters.json`:
@@ -65,10 +87,21 @@ Optional `data/hmp-characters.json`:
   "allowCloseWithActiveCharacter": true,
   "command": "characters",
   "appearanceTimeoutMs": 6000,
+  "startingGear": [
+    { "itemId": "Head_034_Basic", "identified": true, "equipped": false },
+    { "itemId": "Neck_043_Basic", "identified": true, "equipped": false },
+    { "itemId": "Hand_007_Basic", "identified": true, "equipped": false },
+    { "itemId": "Face_005_Basic", "identified": true, "equipped": false }
+  ],
   "title": "Choose Your Wizard",
   "subtitle": "Every story begins with a name."
 }
 ```
+
+Each `startingGear` entry is passed directly to a native inventory `give` patch, so servers may use
+any catalog item ID and the supported native options (`count`, `variation`, `identified`, `equipped`,
+and the other item flags). Set the array to `[]` to grant nothing. There is intentionally no separate
+enable flag. When the key is absent, these four vanilla items remain the default.
 
 Environment overrides are available through `HMP_CHARACTERS_CONFIG`,
 `HMP_CHARACTERS_AUTO_OPEN`, `HMP_CHARACTERS_ALLOW_DELETE` and `HMP_CHARACTERS_COMMAND`.

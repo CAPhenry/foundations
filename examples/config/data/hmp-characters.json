@@ -4,6 +4,12 @@
   "allowCloseWithActiveCharacter": true,
   "command": "characters",
   "appearanceTimeoutMs": 6000,
+  "startingGear": [
+    { "itemId": "Head_034_Basic", "identified": true, "equipped": false },
+    { "itemId": "Neck_043_Basic", "identified": true, "equipped": false },
+    { "itemId": "Hand_007_Basic", "identified": true, "equipped": false },
+    { "itemId": "Face_005_Basic", "identified": true, "equipped": false }
+  ],
   "title": "Choose Your Wizard",
   "subtitle": "Every story begins with a name."
 }

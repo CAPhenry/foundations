@@ -7,6 +7,8 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
 
 ### Added
 
+- `hmp-characters` restores the four cosmetic gear items that vanilla grants during `WEK_01` when a
+  character is created. The identified, unworn defaults are configurable through `startingGear`.
 - `hmp-npcs` as the Foundation-owned, Framework-verified enemy catalog and resource-scoped NPC spawn,
   ownership, limit, death-tracking, and cleanup service.
 - `hmp-doors` gains an `action: "lock"` rule that actively locks a physical door, where `deny` only

@@ -4,12 +4,15 @@ import type { HmpLogger } from "../../hmp-lib/types";
 export type Player = HogwartsMpPlayer;
 export type Core = HmpCore<Player>;
 
+export type StartingGearEntry = Omit<Extract<HogwartsMpInventoryPatchOperation, { op: "give" }>, "op">;
+
 export interface CharacterConfig extends Record<string, unknown> {
     autoOpenOnJoin: boolean;
     allowDelete: boolean;
     allowCloseWithActiveCharacter: boolean;
     command: string;
     appearanceTimeoutMs: number;
+    startingGear: StartingGearEntry[];
     title: string;
     subtitle: string;
 }
