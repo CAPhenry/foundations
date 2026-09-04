@@ -18,12 +18,19 @@ export type Database = HmpMySQL;
 export type Lib = HmpLibServer<Player>;
 export type Logger = Pick<HmpLogger, "error" | "warn" | "info">;
 
+export interface StartingItemEntry {
+    name: string;
+    amount: number;
+    metadata?: Record<string, unknown>;
+}
+
 export interface InventoryConfig extends Record<string, unknown> {
     slots: number;
     maxWeight: number;
     autoSaveMs: number;
     allowInventoryCommand: boolean;
     items: unknown[];
+    startingItems: StartingItemEntry[];
     ui: {
         url: string;
     };

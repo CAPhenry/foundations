@@ -1,4 +1,25 @@
-import type { InventoryConfig, Lib } from "./internal";
+import type { InventoryConfig, Lib, StartingItemEntry } from "./internal";
+
+function normalizeStartingItems(raw: unknown): StartingItemEntry[] {
+    if (raw !== undefined && raw !== null && !Array.isArray(raw)) throw new TypeError("hmp-inventory startingItems must be an array");
+    const source = Array.isArray(raw) ? raw : [];
+    const entries: StartingItemEntry[] = [];
+    for (const candidate of source) {
+        const value = typeof candidate === "string"
+            ? { name: candidate }
+            : candidate && typeof candidate === "object" ? candidate as Record<string, unknown> : null;
+        if (!value) continue;
+        const name = String(value.name ?? value.item ?? "").trim().toLowerCase().slice(0, 64);
+        if (!name) continue;
+        const amount = Math.max(1, Math.min(100000, Math.trunc(Number(value.amount ?? value.count ?? value.quantity)) || 1));
+        const entry: StartingItemEntry = { name, amount };
+        if (value.metadata && typeof value.metadata === "object" && !Array.isArray(value.metadata)) {
+            entry.metadata = value.metadata as Record<string, unknown>;
+        }
+        entries.push(entry);
+    }
+    return entries;
+}
 
 function loadConfig(Hmp: Lib, options: { env?: NodeJS.ProcessEnv; cwd?: string } = {}): InventoryConfig {
     const env = options.env || process.env;
@@ -9,6 +30,7 @@ function loadConfig(Hmp: Lib, options: { env?: NodeJS.ProcessEnv; cwd?: string }
         autoSaveMs: 30000,
         allowInventoryCommand: true,
         items: [],
+        startingItems: [],
         ui: {
             url: "fw://resources/hmp-inventory/dist/index.html",
         },
@@ -25,8 +47,9 @@ function loadConfig(Hmp: Lib, options: { env?: NodeJS.ProcessEnv; cwd?: string }
         throw new TypeError("hmp-inventory ui.url must be a resource URL or an HTTPS URL");
     }
     if (!Array.isArray(config.items)) throw new TypeError("hmp-inventory items must be an array");
+    config.startingItems = normalizeStartingItems(config.startingItems);
     return config;
 }
 
-export = { loadConfig };
+export = { loadConfig, normalizeStartingItems };
 // TypeScript source.

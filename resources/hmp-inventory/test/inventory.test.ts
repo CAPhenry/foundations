@@ -103,6 +103,7 @@ function setup() {
         autoSaveMs: 0,
         allowInventoryCommand: true,
         items: [],
+        startingItems: [],
         ui: { url: "fw://resources/hmp-inventory/dist/index.html" },
     };
     const service = createInventory({ repository, registry, native, core, events, config });

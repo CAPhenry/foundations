@@ -31,11 +31,41 @@ Configure `hmp-mysql`, then optionally create `data/hmp-inventory.json`:
   "ui": {
     "url": "fw://resources/hmp-inventory/dist/index.html"
   },
-  "items": []
+  "items": [],
+  "startingItems": []
 }
 ```
 
 Players can open the bundled UI with `/inventory` or `/hmpinv`. A future input/wheel resource can call `ui.open(player)` instead.
+
+## Starting items
+
+`startingItems` is granted once per character, the first time it loads after being created.
+Existing characters are never touched, so adding an entry later does not hand it out
+retroactively. Each entry is a bare item name or an object:
+
+```json
+{
+  "startingItems": [
+    "housebroom",
+    { "name": "sealed_letter", "amount": 3 },
+    { "name": "native:wiggenweld_potion", "amount": 5 },
+    { "name": "evidence_bag", "amount": 1, "metadata": { "issued": true } }
+  ]
+}
+```
+
+Names resolve through the same registry as `inventory.add`, so custom items, native
+aliases (`native:wiggenweld_potion`) and raw native ids (`HouseBroom`) all work, and a
+native entry lands in its game-authoritative holder exactly as a runtime grant would.
+The grant is queued on `hmp:character:created` and applied after `hmp:character:loaded`,
+once the character's container exists and the native bridge is attached. An unknown name
+or a full/overweight inventory is logged and skipped; the character still loads.
+
+`hmp-characters`' `startingGear` is the sibling knob for the four cosmetic gear pieces
+vanilla grants during `WEK_01`; it patches the native inventory directly. Use
+`startingItems` for everything that should go through the unified inventory (custom rows,
+potions, resources, currency).
 
 ## Inventory appearance
 
