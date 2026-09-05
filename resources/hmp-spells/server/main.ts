@@ -3,7 +3,7 @@ import configModule = require("./config");
 import serviceModule = require("./service");
 import type { HmpCore } from "../../hmp-core/types";
 import type { HmpLibServer } from "../../hmp-lib/types";
-import type { HmpSpellPlayer } from "../types";
+import type { HmpSpellLoadoutAssignments, HmpSpellPlayer } from "../types";
 
 const { resolveSpell } = catalogModule;
 const { loadConfig } = configModule;
@@ -18,6 +18,7 @@ const spells = createSpellService<HmpSpellPlayer>({ core, config, players: () =>
 Exports.register("catalog", spells.catalog);
 Exports.register("policy", spells.policy);
 Exports.register("rules", spells.rules);
+Exports.register("providers", spells.providers);
 Exports.register("grants", spells.grants);
 Exports.register("loadouts", spells.loadouts);
 Exports.register("status", spells.status);
@@ -41,10 +42,18 @@ Events.on("hmp:session:ready", (session: unknown) => {
 });
 Events.on("hmp:character:loaded", (payload: unknown) => { const player = playerFromCharacterPayload(payload); if (player) safeSync(player); });
 Events.on("hmp:character:unloaded", (payload: unknown) => { const player = playerFromCharacterPayload(payload); if (player) safeSync(player); });
+// Character selection can complete before the client has rebuilt its native spell manager.
+// Re-send after both gameplay readiness boundaries so persisted slots are restored after any
+// world-load reset instead of only during the early account/character handshake.
+Events.on("worldReady", safeSync);
+Events.on("loadingFinished", safeSync);
 Events.on("hmp:groups:changed", () => spells.policy.syncAll().catch((error) => logger.warn(`Could not refresh spell policies: ${messageOf(error)}`)));
 Events.on("resourceStop", (name?: string) => {
     if (!name || name === "hmp-spells") spells.stop();
-    else spells.rules.clear(name);
+    else {
+        spells.rules.clear(name);
+        spells.providers.clear(name);
+    }
 });
 
 function parsePayload(raw: unknown): Record<string, unknown> {
@@ -54,6 +63,23 @@ function parsePayload(raw: unknown): Record<string, unknown> {
     }
     return raw && typeof raw === "object" ? raw as Record<string, unknown> : {};
 }
+
+Events.onClient("hmp-spells:assignments", (player: HmpSpellPlayer, raw: unknown) => {
+    const payload = parsePayload(raw);
+    const character = core.characters.active(player);
+    if (!character || Number(payload.characterId) !== character.id) return;
+    void spells.acceptClientAssignments(player, payload.assignments as HmpSpellLoadoutAssignments, {
+        resource: "hmp-spells:client",
+        actor: player,
+        reason: "Foundations spell loadout changed",
+    }).then((changed) => {
+        logger.debug(`Assignments ${changed ? "persisted" : "already stored"} for character ${character.id}`);
+        player.emit("hmp-spells:assignments-saved", JSON.stringify({
+            characterId: character.id,
+            assignments: payload.assignments,
+        }));
+    }).catch((error) => logger.warn(`Could not persist spell assignments for #${player.id}: ${messageOf(error)}`));
+});
 
 const castWindows = new Map<number, { startedAt: number; count: number }>();
 Events.onClient("hmp-spells:cast", (player: HmpSpellPlayer, raw: unknown) => {

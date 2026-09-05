@@ -18,6 +18,8 @@ export interface SpellDependencies<P extends HmpSpellPlayer> {
 }
 
 export interface SpellService<P extends HmpSpellPlayer> extends HmpSpellsServer<P> {
+    // Client-originated slots are already applied locally; persist without replaying policy.
+    acceptClientAssignments: HmpSpellsServer<P>["loadouts"]["setAssignments"];
     stop(): void;
 }
 

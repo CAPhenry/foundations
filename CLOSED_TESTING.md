@@ -131,6 +131,8 @@ created test transaction after its state has been inspected.
   and Incendio; the spell diamond must remain visible.
 - Run `/spells loadout` after the world is ready and compare the four reported slots with the active
   in-game spell diamond.
+- Assign spells through the normal spell menu, reconnect, and confirm all four diamonds are restored.
+  Switch characters and confirm each character restores its own assignments without leaking slots.
 - Grant one spell to a character, reconnect, and confirm it remains unlocked. Switch characters and
   confirm the personal grant does not leak.
 - Revoke the grant and confirm Foundations policy changes immediately. Confirm the documented native

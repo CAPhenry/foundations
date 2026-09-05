@@ -29,20 +29,57 @@ export interface HmpSpellRule {
     priority: number;
     action: "allow" | "deny";
     spells?: "*" | ReadonlyArray<string>;
-    /** Allow rules may grant this many bonus diamonds. Omit to leave loadouts unmanaged. */
+    /** Allow rules may grant this many bonus diamonds. Omit to leave the count unspecified by this rule. */
     bonusLoadouts?: number;
     match?: HmpSpellMatch;
 }
 
 export interface HmpResolvedSpellPolicy {
     unlockSpells: string[];
-    /** null means the native game retains ownership of naturally earned loadout perks. */
+    /** Active characters resolve to 0-3 bonus diamonds, defaulting to 0. null leaves native perks unmanaged. */
     bonusLoadouts: number | null;
 }
 
 export interface HmpSpellEntitlements {
     spells: string[];
+    /** null means no character override; applicable rules or the one-loadout default determine the count. */
     bonusLoadouts: number | null;
+}
+
+export type HmpSpellLoadoutSlots = [string | null, string | null, string | null, string | null];
+export type HmpSpellLoadoutAssignments = [HmpSpellLoadoutSlots, HmpSpellLoadoutSlots, HmpSpellLoadoutSlots, HmpSpellLoadoutSlots];
+
+export interface HmpProvidedSpell {
+    /** Stable provider-local identifier used in saved slots as provider:id. */
+    id: string;
+    label: string;
+    /** native uses registered gameplay names (including modded spells); record is explicit API casting only. */
+    kind: "record" | "native";
+    /** Required for record spells: plugin-rooted Package.Object SpellToolRecord path. */
+    recordPath?: string;
+    /** Required for native compatibility spells: the native gameplay spell name. */
+    nativeName?: string;
+    /** Optional provider-owned icon URL/path for custom HUDs. */
+    icon?: string;
+}
+
+export interface HmpSpellProviderDefinition {
+    /** Globally unique stable id; "native" and "record" are reserved compatibility providers. */
+    id: string;
+    /** Resource owning this registration; it is removed automatically when that resource stops. */
+    resource: string;
+    label?: string;
+    spells: ReadonlyArray<HmpProvidedSpell>;
+}
+
+export interface HmpSpellProviderInfo extends HmpSpellProviderDefinition {
+    label: string;
+    spells: HmpProvidedSpell[];
+}
+
+export interface HmpResolvedProvidedSpell extends HmpProvidedSpell {
+    provider: string;
+    ref: string;
 }
 
 export interface HmpSpellResolution<P = HmpSpellPlayer> {
@@ -50,6 +87,8 @@ export interface HmpSpellResolution<P = HmpSpellPlayer> {
     character: HmpCoreCharacter | null;
     groups: HmpCoreGroup[];
     entitlements: HmpSpellEntitlements;
+    assignments: HmpSpellLoadoutAssignments | null;
+    providers: HmpSpellProviderInfo[];
     policy: HmpResolvedSpellPolicy;
 }
 
@@ -81,9 +120,24 @@ export interface HmpSpellGrantsApi<P = HmpSpellPlayer> {
 }
 
 export interface HmpSpellLoadoutsApi<P = HmpSpellPlayer> {
+    /** Returns the stored character override, or null when unset (not the resolved count). */
     get(player: P): Promise<number | null>;
+    /** Sets 0-3 bonus diamonds, for 1-4 total loadouts. */
     set(player: P, bonusLoadouts: number, context?: { resource?: string; actor?: P; reason?: string }): Promise<boolean>;
+    /** Clears the character override, restoring applicable rules or the one-loadout default. */
     unmanage(player: P, context?: { resource?: string; actor?: P; reason?: string }): Promise<boolean>;
+    getAssignments(player: P): Promise<HmpSpellLoadoutAssignments | null>;
+    setAssignments(player: P, assignments: HmpSpellLoadoutAssignments, context?: { resource?: string; actor?: P; reason?: string }): Promise<boolean>;
+    setSlot(player: P, loadout: number, slot: number, spellRef: string | null, context?: { resource?: string; actor?: P; reason?: string }): Promise<boolean>;
+}
+
+export interface HmpSpellProvidersApi {
+    register(provider: HmpSpellProviderDefinition): () => boolean;
+    unregister(id: string, resource: string): boolean;
+    clear(resource: string): number;
+    get(id: string): HmpSpellProviderInfo | null;
+    list(resource?: string): HmpSpellProviderInfo[];
+    resolve(spellRef: string): HmpResolvedProvidedSpell | null;
 }
 
 export interface HmpSpellsStatus {
@@ -91,6 +145,7 @@ export interface HmpSpellsStatus {
     catalogSize: number;
     configuredRules: number;
     runtimeRules: number;
+    providers: number;
     syncedPlayers: number;
     uptimeMs: number;
 }
@@ -99,6 +154,7 @@ export interface HmpSpellsServer<P = HmpSpellPlayer> {
     catalog: HmpSpellCatalogApi;
     policy: HmpSpellPolicyApi<P>;
     rules: HmpSpellRulesApi<P>;
+    providers: HmpSpellProvidersApi;
     grants: HmpSpellGrantsApi<P>;
     loadouts: HmpSpellLoadoutsApi<P>;
     status(): HmpSpellsStatus;
