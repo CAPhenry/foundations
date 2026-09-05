@@ -7,6 +7,12 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
 
 ### Added
 
+- `hmp-inventory` gains a `startingItems` config list, granted once per character the first
+  time it loads after being created. Entries are a bare item name or
+  `{ name, amount, metadata }`, resolve through the same registry as `inventory.add` (custom
+  rows, native aliases, and raw native ids all work), and are queued on
+  `hmp:character:created` then applied after `hmp:character:loaded`. Existing characters are
+  never touched; unknown or non-fitting items are logged and skipped.
 - `hmp-spells` persists all four spell diamonds per character, capturing assignments from the native
   spell menu and client API and restoring them on reconnect, character switching, and world loading.
 - Spell providers and stable `provider:spell` slot references support registered modded gameplay

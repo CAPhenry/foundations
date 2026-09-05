@@ -7,6 +7,7 @@ import inventoryModule = require("./inventory");
 import transfersModule = require("./transfers");
 import resourceModule = require("./resource");
 import catalogModule = require("./native-catalog");
+import startingItemsModule = require("./starting-items");
 import type { HmpCoreSession } from "../../hmp-core/types";
 import type { HmpInventoryUseTarget } from "../types";
 import type { CharacterPayload, Player } from "./internal";
@@ -20,6 +21,7 @@ const { createInventory } = inventoryModule;
 const { createTransferService } = transfersModule;
 const { createInventoryResource } = resourceModule;
 const { createNativeItems } = catalogModule;
+const { createStartingItemsGrant } = startingItemsModule;
 
 const messageOf = (error: unknown): string => error instanceof Error ? error.message : String(error);
 
@@ -40,12 +42,19 @@ const resource = createInventoryResource({
     database, repository, registry, inventory, transfers, native, core, events: Events, config, migrations, logger,
     listPlayers: () => PlayerManager.getAll(),
 });
+const startingItems = createStartingItemsGrant(config.startingItems, { inventory, ready: resource.ready, logger });
 const actions = Hmp.rateLimit.create<number>({ limit: 6, windowMs: 2000 });
 
 for (const name of ["items", "inventory", "containers", "transfers", "native", "ui", "status"] as const) Exports.register(name, resource[name]);
 
 Events.on("hmp:character:loading", (payload: unknown) => resource.onCharacterLoading(payload as CharacterPayload).catch((error: unknown) => logger.error(`Could not load inventory: ${messageOf(error)}`)));
 Events.on("hmp:character:unloading", (payload: unknown) => resource.onCharacterUnloading(payload as CharacterPayload).catch((error: unknown) => logger.error(`Could not save inventory: ${messageOf(error)}`)));
+Events.on("hmp:character:created", (payload: unknown) => startingItems.created(payload as CharacterPayload));
+Events.on("hmp:character:loaded", (payload: unknown) => {
+    const value = payload as CharacterPayload;
+    startingItems.loaded(value).catch((error: unknown) => logger.error(`Could not grant starting items to character ${value?.character?.id}: ${messageOf(error)}`));
+});
+Events.on("hmp:character:deleted", (payload: unknown) => startingItems.deleted(payload as CharacterPayload));
 Events.on("hmp:session:ended", (session: unknown) => resource.disconnect((session as HmpCoreSession<Player>).player));
 Events.on("playerInventoryUpdated", (player: unknown, rows: unknown) => resource.onNativeUpdated(player as Player, rows).catch((error: unknown) => logger.warn(`Could not persist native inventory: ${messageOf(error)}`)));
 Events.on("hmp:inventory:changed", (payload: unknown) => {

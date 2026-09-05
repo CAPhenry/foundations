@@ -6,6 +6,9 @@
   "ui": {
     "url": "fw://resources/hmp-inventory/dist/index.html"
   },
+  "startingItems": [
+    { "name": "sealed_letter", "amount": 1, "metadata": {} }
+  ],
   "items": [
     {
       "name": "sealed_letter",
