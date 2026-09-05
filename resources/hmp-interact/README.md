@@ -112,6 +112,44 @@ To find a path, press **F6** in-game for the World builder and search; hovering 
 full path. A well-formed path to an asset that does not exist is accepted by the server and simply
 never renders, so check the client log if a prop's prompt appears without its mesh.
 
+## Optional characters
+
+An interaction can instead own a replicated Framework `Character`: a dressed, stationary human built
+from a registry character id, standing at the interaction's own position so the prompt can never
+drift from the body. It has no AI, no health and never moves. `position` is the pawn origin (a
+player's `position`, about 90 cm above the feet); `promptOffsetZ` defaults to 40 (chest height) for a
+character, and an optional `label` draws a nameplate above the head.
+
+```ts
+Interact.register({
+    id: "shop.ollivander",
+    resource: "hmp-shops",
+    label: "Browse wands",
+    position: { x: 100, y: 200, z: 300 },
+    radius: 250,
+    character: { characterId: "GerboldOllivander", yaw: 90 },
+    handler({ player }) {
+        // open the shop
+    },
+});
+```
+
+`characterId` must be one of the human registry ids below (`Character.isAllowed(id)` checks at
+runtime; `register` throws otherwise). Non-human rigs — house-elves, goblins, centaurs, ghosts — are
+deliberately absent because they break the proxy build. Cuthbert Binns is on the list only because
+the game files him as a professor; expect his look to be odd.
+
+| Group | Ids |
+|---|---|
+| Vendors | AgnesCoffey, AlbieWeekes, AugustusHill, BernardNdiaye, CalliopeSnelling, ClaireBeaumont, CliffordCromwell, CrispinDunn, EddieThistlewood, EdgarAdley, EwartMacquod, FatimahLawang, FlorenceGreen, GerboldOllivander, HermenegildaNavarro, IndiraWolff, JalalSehmi, LeonaPeck, LeopoldBabcocke, PadraicHaggarty, PercivalPippin, PriyaTreadwell, RohanPrakash, ThomasBrown, TimothyTeasdale |
+| Generic shopkeepers | VENDORCauldronShop, VENDORJokeShop, VENDORMusicShop, VENDORQuillShop, VENDORSecondHandShop1, VENDORTeaShop |
+| Townspeople | AesopSharp_Young, AgabusPhilbert, AlexandraRicketts, AlfredLawley, AlmaHall, AltheaTwiddle, AnabelCalhoun, ArchieBickle, BettyBowditch, CassandraMason, CassiusWillardsey, CillianHawksworth, ClementineWillardsey, DaisyAbril, DorothyDencourt, ErnieLark, HansHoode, HelenThistlewood, HubertGray, HyacinthOlivier, IskoAbril, JasperTrout, JemimaCollins, JohannaBickle, LottieFeatherbottom, MarianneMoffett, NoraTreadwell, OttoDibble, PadraicHanks, PatrickRedding, PerditaStrix, PiersPemberton, RowlandOakes, RunoCalhoun, Sirona, SolomonSallow, ThaddeusTravers, WigotSpitchwick |
+| Students | AdelaideOakes, AmitKakkar, AndrewLarson, AnneSallow, ArthurSiggs, AstoriaCrickett, BennyStokes, Bully1, Bully2, CharlotteMorrison, ConstanceDagworth, CressidaBlume, DuncanHobhouse, EricNorthcott, EvangelineBardsley, EverettClopton, FrancisDoyle, GarrethWeasley, GertrudeWigley, GraceWaldegrave, HectorWeasley, HerbertFleming, HildaLoddington, ImeldaReyes, LawrenceDavies, LeanderPrewett, LenoraAbbott, LucanBrattleby, MahendraKapoor, NatsaiOnai, NellieOggspire, NeridaRoberts, OminisGaunt, OwenWynn, PoppySweeting, PriscillaWakefield, SacharissaTugwood, SamanthaDale, SebastianSallow, SophroniaFranklin, VioletMcDowell, ZenobiaNoke |
+| Professors | AbrahamRonen, AesopSharp, AesopSharpTeen, BaiHowin, ChiyoKogawa, CuthbertBinns, DinahHecat, EleazarFig, GeorgeOsric, MatildaWeasley, MirabelGarlick, MudiwaOnai, PhineasBlack, PhineasBlack_NoGloves_Look, SatyavatiShah |
+| Prefects | GenericGryffindorPrefectBoy, GenericGryffindorPrefectGirl, GenericHufflepuffPrefectBoy, GenericHufflepuffPrefectGirl, GenericRavenclawPrefectBoy, GenericRavenclawPrefectGirl, GenericSlytherinPrefectBoy, GenericSlytherinPrefectGirl, HectorFawley |
+| Staff and enforcers | AgnesScriven, GladwinMoon, NoreenBlainey, RuthSinger, T2AuthorityFemale1, T2AuthorityFemale2, T2AuthorityMale1, T2AuthorityMale2 |
+| Other | AnneThisbe, CarriageDriver, IgnatiaFlooTravel, IsidoraBrother, IsidoraMorganachFather, NiamhFitzgerald, PensieveStudent, StudentVictim |
+
 ## Selection and concurrency
 
 - The client scans every 100 ms and displays at most one `Hud.showPrompt`.

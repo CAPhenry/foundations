@@ -27,6 +27,19 @@ export interface InteractWorldObjects {
     destroy(key: string): boolean;
 }
 
+export interface InteractCharacters {
+    create(key: string, characterId: string, options: {
+        x: number;
+        y: number;
+        z: number;
+        yaw?: number;
+        scale?: number;
+        label?: string;
+        promptHeight?: number;
+    }): unknown;
+    destroy(key: string): boolean;
+}
+
 export interface InteractDependencies<P extends HmpInteractPlayer> {
     core: HmpCore<P>;
     inventory: HmpInventory<P>;
@@ -34,6 +47,7 @@ export interface InteractDependencies<P extends HmpInteractPlayer> {
     players(): P[];
     events: InteractEvents;
     worldObjects?: InteractWorldObjects;
+    characters?: InteractCharacters;
     logger: InteractLogger;
     now?: () => number;
 }

@@ -14,6 +14,7 @@ const interact = createInteractService<HmpInteractPlayer>({
     players: () => PlayerManager.getAll(),
     events: Events,
     worldObjects: typeof WorldObject === "undefined" ? undefined : WorldObject,
+    characters: typeof Character === "undefined" ? undefined : Character,
     logger,
 });
 

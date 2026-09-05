@@ -23,6 +23,9 @@ function worldObjectKey(id: string): string {
     return `hmp-interact:${id}`;
 }
 
+/** Centimetres over the pawn origin for a character's nameplate; matches the mod's player nameplates. */
+const CHARACTER_LABEL_HEIGHT = 100;
+
 function createInteractService<P extends HmpInteractPlayer>(dependencies: InteractDependencies<P>): InteractService<P> {
     const { core, inventory, ui, events, logger } = dependencies;
     const now = dependencies.now || Date.now;
@@ -81,24 +84,42 @@ function createInteractService<P extends HmpInteractPlayer>(dependencies: Intera
         for (const player of dependencies.players()) emit(player, "hmp-interact:snapshot", snapshot(player));
     }
 
-    function publish(definition: HmpInteractionDefinition<P>): void {
-        if (!definition.object || !dependencies.worldObjects) return;
-        const object = definition.object;
-        const created = dependencies.worldObjects.create(worldObjectKey(definition.id), object.model, {
-            ...definition.position,
-            pitch: object.pitch,
-            yaw: object.yaw,
-            roll: object.roll,
-            scale: object.scale,
-            collision: object.collision,
-        });
-        // A server that warns-and-returns instead of throwing would otherwise leave a registered zone
-        // whose prompt works and whose mesh never appears.
-        if (!created) throw new Error(`world object for '${definition.id}' was refused (model: ${String(object.model)})`);
+    function owns(definition: HmpInteractionDefinition<P> | undefined): boolean {
+        return Boolean(definition && (definition.object || definition.character));
     }
 
-    function unpublish(id: string): void {
-        if (dependencies.worldObjects) dependencies.worldObjects.destroy(worldObjectKey(id));
+    function publish(definition: HmpInteractionDefinition<P>): void {
+        const object = definition.object;
+        if (object && dependencies.worldObjects) {
+            const created = dependencies.worldObjects.create(worldObjectKey(definition.id), object.model, {
+                ...definition.position,
+                pitch: object.pitch,
+                yaw: object.yaw,
+                roll: object.roll,
+                scale: object.scale,
+                collision: object.collision,
+            });
+            // A server that warns-and-returns instead of throwing would otherwise leave a registered zone
+            // whose prompt works and whose mesh never appears.
+            if (!created) throw new Error(`world object for '${definition.id}' was refused (model: ${String(object.model)})`);
+        }
+        const character = definition.character;
+        if (character && dependencies.characters) {
+            // The optional nameplate sits at player-nameplate height, independent of the chest-level prompt.
+            const created = dependencies.characters.create(worldObjectKey(definition.id), character.characterId, {
+                ...definition.position,
+                yaw: character.yaw,
+                scale: character.scale,
+                label: character.label,
+                promptHeight: CHARACTER_LABEL_HEIGHT,
+            });
+            if (!created) throw new Error(`character for '${definition.id}' was refused (id: ${character.characterId})`);
+        }
+    }
+
+    function unpublish(definition: HmpInteractionDefinition<P>): void {
+        if (definition.object && dependencies.worldObjects) dependencies.worldObjects.destroy(worldObjectKey(definition.id));
+        if (definition.character && dependencies.characters) dependencies.characters.destroy(worldObjectKey(definition.id));
     }
 
     function register(raw: HmpInteractionDefinition<P>): () => boolean {
@@ -108,10 +129,10 @@ function createInteractService<P extends HmpInteractPlayer>(dependencies: Intera
         if (existing && existing.resource !== definition.resource) {
             throw new Error(`interaction '${definition.id}' is already owned by '${existing.resource}'`);
         }
-        if (existing?.object) unpublish(existing.id);
+        if (existing && owns(existing)) unpublish(existing);
         try { publish(definition); }
         catch (error) {
-            if (existing?.object) {
+            if (existing && owns(existing)) {
                 try { publish(existing); }
                 catch (restoreError) { logger.error(`[hmp-interact] could not restore '${existing.id}' after replacement failed`, restoreError); }
             }
@@ -133,7 +154,7 @@ function createInteractService<P extends HmpInteractPlayer>(dependencies: Intera
         const definition = interactions.get(id);
         if (!definition || (resource && definition.resource !== resource)) return false;
         interactions.delete(id);
-        if (definition.object) unpublish(id);
+        if (owns(definition)) unpublish(definition);
         lockedInteractions.delete(id);
         for (const key of [...cooldowns.keys()]) if (key.includes(`:${id}:`)) cooldowns.delete(key);
         revision++;
@@ -284,7 +305,7 @@ function createInteractService<P extends HmpInteractPlayer>(dependencies: Intera
         if (stopped) return 0;
         stopped = true;
         const count = interactions.size;
-        for (const id of interactions.keys()) unpublish(id);
+        for (const definition of interactions.values()) if (owns(definition)) unpublish(definition);
         interactions.clear();
         activePlayers.clear();
         lockedInteractions.clear();
