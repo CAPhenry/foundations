@@ -89,7 +89,7 @@ Interact.register({
     radius: 250,
     promptOffsetZ: 150,
     object: {
-        model: "/Game/Environment/.../SM_HGW_BulletinBrd.SM_HGW_BulletinBrd",
+        model: "/Game/Gameplay/Stations/Interaction/MailInteraction/Props/SM_HGW_BulletinBrd.SM_HGW_BulletinBrd",
         yaw: 90,
         collision: true,
     },
@@ -102,6 +102,15 @@ Interact.register({
 The object is created under `hmp-interact:<id>` and destroyed when the registration or owning
 resource is removed. `hmp-interact` draws the prompt itself, so the object does not receive a second
 native prompt.
+
+`model` is a full StaticMesh asset path in `/Root/Dir/Name.Name` form — the package path with the
+object name repeated after the dot, exactly as the example shows. Any mounted content root works,
+including a mod pak's, so a numeric catalog id is only a shorthand for the meshes the server ships
+with. `register` throws if the path is malformed.
+
+To find a path, press **F6** in-game for the World builder and search; hovering a result shows its
+full path. A well-formed path to an asset that does not exist is accepted by the server and simply
+never renders, so check the client log if a prop's prompt appears without its mesh.
 
 ## Selection and concurrency
 

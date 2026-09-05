@@ -13,6 +13,28 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
   rows, native aliases, and raw native ids all work), and are queued on
   `hmp:character:created` then applied after `hmp:character:loaded`. Existing characters are
   never touched; unknown or non-fitting items are logged and skipped.
+- `hmp-spells` persists all four spell diamonds per character, capturing assignments from the native
+  spell menu and client API and restoring them on reconnect, character switching, and world loading.
+- Spell providers and stable `provider:spell` slot references support registered modded gameplay
+  names through the native HUD, plus explicit API casting of plugin-owned spell records. Existing
+  raw gameplay names and record paths are normalized without clearing stored assignments.
+
+### Changed
+
+- Active characters default to one spell loadout when no personal override or applicable rule sets
+  the count. `loadouts.unmanage()` clears the personal override and resumes the rule/default count;
+  it no longer leaves a previous character's native loadout perks in place.
+
+### Fixed
+
+- Client assignment saves are acknowledged without replaying native slot writes, avoiding duplicate
+  assignment sounds and invalid icons while the spell menu is open. Character restoration remains
+  separate from user assignment events.
+
+### Upgrade notes
+
+- Update the HogwartsMP client alongside Foundations for native `spellAssignment` events, live-slot
+  reads, and restoration event suppression. Foundations adds no custom spell HUD or casting key bindings.
 
 ## [0.3.0] - 2026-09-02
 

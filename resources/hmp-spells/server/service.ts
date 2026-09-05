@@ -1,13 +1,18 @@
 import catalogModule = require("../shared/catalog");
+import loadoutsModule = require("../shared/loadouts");
 import configModule = require("./config");
 import policyModule = require("./policy");
-import type { HmpSpellEntitlements, HmpSpellPlayer, HmpSpellRule } from "../types";
+import providersModule = require("../shared/providers");
+import type { HmpSpellEntitlements, HmpSpellLoadoutAssignments, HmpSpellPlayer, HmpSpellProviderDefinition, HmpSpellProviderInfo, HmpSpellRule } from "../types";
 import type { SpellDependencies, SpellService } from "./internal";
 
 const { catalog, resolveSpell } = catalogModule;
+const { cloneLoadoutAssignments, normalizeLoadoutAssignments, normalizeSlotSpellId } = loadoutsModule;
+const { normalizeProvider, resolveProvidedSpell } = providersModule;
 const { normalizeRule } = configModule;
 const { evaluateRules } = policyModule;
 const METADATA_KEY = "hmp-spells:entitlements";
+const ASSIGNMENTS_METADATA_KEY = "hmp-spells:loadout-assignments";
 
 function sanitizeEntitlements(raw: unknown): HmpSpellEntitlements {
     const value = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : {};
@@ -26,6 +31,7 @@ function createSpellService<P extends HmpSpellPlayer>(dependencies: SpellDepende
     const startedAt = now();
     const synced = new Set<number>();
     const runtimeRules = new Map<string, HmpSpellRule>();
+    const runtimeProviders = new Map<string, HmpSpellProviderInfo>();
     let stopped = false;
 
     const ruleKey = (resource: string, id: string) => `${resource}:${id}`;
@@ -44,15 +50,87 @@ function createSpellService<P extends HmpSpellPlayer>(dependencies: SpellDepende
         await core.metadata.setCharacter(character.id, METADATA_KEY, { version: 1, spells: [...value.spells].sort(), ...(value.bonusLoadouts === null ? {} : { bonusLoadouts: value.bonusLoadouts }) });
     }
 
+    async function readAssignmentsForCharacter(characterId: number): Promise<HmpSpellLoadoutAssignments | null> {
+        const stored = await core.metadata.getCharacter(characterId, ASSIGNMENTS_METADATA_KEY) as { assignments?: unknown } | undefined;
+        return normalizeLoadoutAssignments(stored?.assignments);
+    }
+
+    async function readAssignments(player: P): Promise<HmpSpellLoadoutAssignments | null> {
+        const character = activeCharacter(player);
+        return character ? readAssignmentsForCharacter(character.id) : null;
+    }
+
+    async function setAssignments(player: P, rawAssignments: HmpSpellLoadoutAssignments, context = {}, syncClient = true): Promise<boolean> {
+        const character = activeCharacter(player);
+        if (!character) throw new Error("No character is active");
+        const assignments = normalizeLoadoutAssignments(rawAssignments);
+        if (!assignments) throw new TypeError("assignments must contain four loadouts with four spell names or null slots each");
+        const stored = await core.metadata.getCharacter(character.id, ASSIGNMENTS_METADATA_KEY) as { assignments?: unknown } | undefined;
+        const previous = normalizeLoadoutAssignments(stored?.assignments);
+        for (let loadout = 0; loadout < 4; loadout++) for (let slot = 0; slot < 4; slot++) {
+            const spellRef = assignments[loadout][slot];
+            // Preserve an unavailable provider reference already stored for the character, but do
+            // not let a client invent new provider ids. It becomes usable again when its owner loads.
+            if (spellRef && !resolveProviderSpell(spellRef) && previous?.[loadout][slot] !== spellRef) {
+                throw new TypeError(`Unknown spell provider reference '${spellRef}'`);
+            }
+        }
+        if (JSON.stringify(previous) === JSON.stringify(assignments)) return false;
+        await core.metadata.setCharacter(character.id, ASSIGNMENTS_METADATA_KEY, { version: 2, assignments });
+        if (syncClient) await sync(player);
+        dependencies.emit?.("hmp:spells:assignments", { ...contextPayload(player, null, context, character), assignments });
+        return true;
+    }
+
+    function providerList(resource?: string): HmpSpellProviderInfo[] {
+        return [...runtimeProviders.values()]
+            .filter((provider) => !resource || provider.resource === resource)
+            .map((provider) => ({ ...provider, spells: provider.spells.map((spell) => ({ ...spell })) }));
+    }
+
+    function resolveProviderSpell(spellRef: string) {
+        return resolveProvidedSpell(spellRef, providerList());
+    }
+
+    async function setSlot(player: P, rawLoadout: number, rawSlot: number, rawSpellRef: string | null, context = {}): Promise<boolean> {
+        const loadout = Number(rawLoadout);
+        const slot = Number(rawSlot);
+        if (!Number.isSafeInteger(loadout) || loadout < 0 || loadout > 3) throw new TypeError("loadout must be an integer from 0 to 3");
+        if (!Number.isSafeInteger(slot) || slot < 0 || slot > 3) throw new TypeError("slot must be an integer from 0 to 3");
+        const spellRef = rawSpellRef === null ? null : normalizeSlotSpellId(rawSpellRef);
+        if (rawSpellRef !== null && (!spellRef || !resolveProviderSpell(spellRef))) throw new TypeError(`Unknown spell provider reference '${rawSpellRef}'`);
+        const current = await readAssignments(player) || [
+            [null, null, null, null], [null, null, null, null],
+            [null, null, null, null], [null, null, null, null],
+        ];
+        if (current[loadout][slot] === spellRef) return false;
+        const next = cloneLoadoutAssignments(current);
+        next[loadout][slot] = spellRef;
+        return setAssignments(player, next, context);
+    }
+
     async function resolve(player: P) {
         if (stopped) throw new Error("hmp-spells is stopped");
-        const [groups, entitlements] = await Promise.all([core.groups.effective(player), read(player)]);
-        return { player, character: activeCharacter(player), groups, entitlements, policy: evaluateRules(allRules(), groups, entitlements) };
+        const character = activeCharacter(player);
+        const [groups, entitlements, assignments] = await Promise.all([
+            core.groups.effective(player),
+            character ? core.metadata.getCharacter(character.id, METADATA_KEY).then(sanitizeEntitlements) : Promise.resolve({ spells: [], bonusLoadouts: null }),
+            character ? readAssignmentsForCharacter(character.id) : Promise.resolve(null),
+        ]);
+        const policy = evaluateRules(allRules(), groups, entitlements);
+        // An active character owns its count instead of inheriting the previous character's perks.
+        if (character && policy.bonusLoadouts === null) policy.bonusLoadouts = 0;
+        return { player, character, groups, entitlements, assignments, providers: providerList(), policy };
     }
 
     async function sync(player: P) {
         const resolution = await resolve(player);
-        player.emit("hmp-spells:policy", JSON.stringify(resolution.policy));
+        player.emit("hmp-spells:policy", JSON.stringify({
+            ...resolution.policy,
+            characterId: resolution.character?.id ?? null,
+            assignments: resolution.assignments,
+            providers: resolution.providers,
+        }));
         synced.add(Number(player.id));
         return resolution.policy;
     }
@@ -63,8 +141,8 @@ function createSpellService<P extends HmpSpellPlayer>(dependencies: SpellDepende
         return players.length;
     }
 
-    function contextPayload(player: P, spell: string | null, context: { resource?: string; actor?: P; reason?: string } = {}) {
-        return { player, character: activeCharacter(player), spell, resource: context.resource || "unknown", actor: context.actor || null, reason: String(context.reason || "").slice(0, 500) };
+    function contextPayload(player: P, spell: string | null, context: { resource?: string; actor?: P; reason?: string } = {}, character = activeCharacter(player)) {
+        return { player, character, spell, resource: context.resource || "unknown", actor: context.actor || null, reason: String(context.reason || "").slice(0, 500) };
     }
 
     async function grant(player: P, rawSpell: string, context = {}): Promise<boolean> {
@@ -152,19 +230,70 @@ function createSpellService<P extends HmpSpellPlayer>(dependencies: SpellDepende
         return count;
     }
 
+    function unregisterProvider(id: string, resource: string): boolean {
+        const provider = runtimeProviders.get(String(id));
+        if (!provider || provider.resource !== String(resource)) return false;
+        runtimeProviders.delete(provider.id);
+        if (!stopped) void syncAll();
+        return true;
+    }
+
+    function registerProvider(rawProvider: HmpSpellProviderDefinition): () => boolean {
+        if (stopped) throw new Error("hmp-spells is stopped");
+        const provider = normalizeProvider(rawProvider);
+        if (runtimeProviders.has(provider.id)) throw new Error(`Spell provider '${provider.id}' is already registered`);
+        runtimeProviders.set(provider.id, provider);
+        void syncAll();
+        let active = true;
+        return () => {
+            if (!active) return false;
+            active = false;
+            return unregisterProvider(provider.id, provider.resource);
+        };
+    }
+
+    function clearProviders(resource: string): number {
+        let count = 0;
+        for (const provider of [...runtimeProviders.values()]) {
+            if (provider.resource !== resource) continue;
+            runtimeProviders.delete(provider.id);
+            count++;
+        }
+        if (count && !stopped) void syncAll();
+        return count;
+    }
+
     return Object.freeze({
         catalog,
+        // The network handler acknowledges this save separately. Replaying all slots here would
+        // run SlotSpellFromCode while the native menu is open, replaying sound/UI side effects.
+        acceptClientAssignments: (player: P, assignments: HmpSpellLoadoutAssignments, context = {}) => setAssignments(player, assignments, context, false),
         policy: Object.freeze({ resolve, sync, syncAll }),
         rules: Object.freeze({
             register, unregister, clear: clearRules,
             list: (resource?: string) => [...runtimeRules.values()].filter((rule) => !resource || rule.resource === resource).map((rule) => ({ ...rule })),
             refresh: syncAll,
         }),
+        providers: Object.freeze({
+            register: registerProvider,
+            unregister: unregisterProvider,
+            clear: clearProviders,
+            get: (id: string) => providerList().find((provider) => provider.id === id) || null,
+            list: providerList,
+            resolve: resolveProviderSpell,
+        }),
         grants: Object.freeze({ list: async (player: P) => (await read(player)).spells, grant, revoke, clear }),
-        loadouts: Object.freeze({ get: async (player: P) => (await read(player)).bonusLoadouts, set: setLoadouts, unmanage: unmanageLoadouts }),
-        status: () => ({ state: stopped ? "stopped" as const : "ready" as const, catalogSize: catalog.list().length, configuredRules: config.rules.length, runtimeRules: runtimeRules.size, syncedPlayers: synced.size, uptimeMs: now() - startedAt }),
-        stop: () => { stopped = true; synced.clear(); runtimeRules.clear(); },
+        loadouts: Object.freeze({
+            get: async (player: P) => (await read(player)).bonusLoadouts,
+            set: setLoadouts,
+            unmanage: unmanageLoadouts,
+            getAssignments: readAssignments,
+            setAssignments,
+            setSlot,
+        }),
+        status: () => ({ state: stopped ? "stopped" as const : "ready" as const, catalogSize: catalog.list().length, configuredRules: config.rules.length, runtimeRules: runtimeRules.size, providers: runtimeProviders.size, syncedPlayers: synced.size, uptimeMs: now() - startedAt }),
+        stop: () => { stopped = true; synced.clear(); runtimeRules.clear(); runtimeProviders.clear(); },
     });
 }
 
-export = { createSpellService, sanitizeEntitlements, METADATA_KEY };
+export = { createSpellService, sanitizeEntitlements, ASSIGNMENTS_METADATA_KEY, METADATA_KEY };

@@ -422,7 +422,7 @@ declare global {
     const Spells: {
         setPolicy(lockIds: string[], bonusLoadouts?: number): void;
         loadout(loadoutIndex?: number): { index: number; current: number; slots: Array<string | null> } | null;
-        setLoadoutSlot(slot: number, spellName: string | null, loadoutIndex?: number): boolean;
+        setLoadoutSlot(slot: number, spellName: string | null, loadoutIndex?: number, emitAssignmentEvent?: boolean): boolean;
         cast(slot: number): { accepted: boolean; slot: number; spellName: string | null; reason: string | null };
     };
 }

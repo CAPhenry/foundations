@@ -84,7 +84,7 @@ function createInteractService<P extends HmpInteractPlayer>(dependencies: Intera
     function publish(definition: HmpInteractionDefinition<P>): void {
         if (!definition.object || !dependencies.worldObjects) return;
         const object = definition.object;
-        dependencies.worldObjects.create(worldObjectKey(definition.id), object.model, {
+        const created = dependencies.worldObjects.create(worldObjectKey(definition.id), object.model, {
             ...definition.position,
             pitch: object.pitch,
             yaw: object.yaw,
@@ -92,6 +92,9 @@ function createInteractService<P extends HmpInteractPlayer>(dependencies: Intera
             scale: object.scale,
             collision: object.collision,
         });
+        // A server that warns-and-returns instead of throwing would otherwise leave a registered zone
+        // whose prompt works and whose mesh never appears.
+        if (!created) throw new Error(`world object for '${definition.id}' was refused (model: ${String(object.model)})`);
     }
 
     function unpublish(id: string): void {
