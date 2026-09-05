@@ -131,7 +131,7 @@ function shop() {
         resource: "hmp-potions",
         label: "J. Pippin's Potions",
         description: "Potions and ingredients",
-        interaction: { position: { x: 0, y: 0, z: 0 }, radius: 250 },
+        interaction: { position: { x: 0, y: 0, z: 0 }, radius: 250, character: { characterId: "PercivalPippin", label: "Parry Pippin" } },
         offers: [
             { id: "potion", item: "potion", buyPrice: 10, sellPrice: 4, stock: 5, maxQuantity: 10 },
             { id: "ingredient", item: "ingredient", buyPrice: 2 },
@@ -154,6 +154,8 @@ test("registers an interaction, initializes persistent stock and cleans by owner
     await Promise.resolve();
     await Promise.resolve();
     assert.ok(state.interactions.has("shop:potions"));
+    const registered = state.interactions.get("shop:potions") as { character?: { characterId: string; label?: string } };
+    assert.deepStrictEqual(registered.character, { characterId: "PercivalPippin", label: "Parry Pippin" });
     assert.strictEqual(await state.service.stock.get("potions", "potion"), 5);
     assert.strictEqual(dispose(), true);
     assert.strictEqual(dispose(), false);

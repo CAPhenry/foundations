@@ -41,6 +41,8 @@ const unregister = Shops.shops.register({
             model: "/Game/Environment/.../SM_ShopCounter.SM_ShopCounter",
             yaw: 90,
         },
+        // Optional vendor body: a stationary dressed human at the same spot (see hmp-interact).
+        character: { characterId: "AugustusHill", yaw: 90, label: "Augustus Hill" },
     },
     offers: [
         {

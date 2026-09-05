@@ -15,6 +15,9 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
 - `hmp-interact` registrations can own a replicated Framework `Character`: a dressed, stationary human
   built from an allowlisted registry id, standing at the zone's own position. Character prompts default
   to chest height and an optional `label` draws a nameplate; the README lists the accepted ids.
+- `hmp-shops` forwards an optional `interaction.character` to `hmp-interact`, so a shop registers its
+  vendor body together with its stock. A closed-testing potion vendor (Parry Pippin) stands on the
+  Hogsmeade high street with limited stock.
 
 ### Changed
 

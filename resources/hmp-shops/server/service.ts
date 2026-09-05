@@ -150,6 +150,7 @@ function createShopsService(dependencies: ShopsDependencies): ShopsService {
                 priority: placement.priority,
                 virtualWorld: placement.virtualWorld,
                 object: placement.object,
+                character: placement.character,
                 requirements: interactRequirements(definition),
                 handler: ({ player }) => open(player, definition.id),
             });
