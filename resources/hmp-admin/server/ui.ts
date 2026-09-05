@@ -84,6 +84,7 @@ function createAdminUi(options: { admin: AdminService; ui: Ui; banking: Banking;
             { label: "World / ping", value: `${target.virtualWorld} / ${target.ping}ms` },
             { label: "Area / region", value: target.location ? `${target.location.areaId} / ${target.location.regionId || "—"}` : "Loading / unavailable" },
             { label: "Position", value: `${target.position.x.toFixed(1)}, ${target.position.y.toFixed(1)}, ${target.position.z.toFixed(1)}` },
+            { label: "Yaw", value: target.location ? `${target.location.yaw.toFixed(1)}°` : "—" },
             { label: "Groups", value: target.groups.length ? target.groups.map((group) => `${group.key}:${group.grade}`).join(", ") : "None" },
         ];
     }
