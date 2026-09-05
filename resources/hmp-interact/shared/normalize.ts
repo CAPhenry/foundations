@@ -96,6 +96,15 @@ function normalizeInteraction<P>(raw: HmpInteractionDefinition<P>): HmpInteracti
     if (object && !((typeof object.model === "string" && clean(object.model, 500)) || Number.isFinite(Number(object.model)))) {
         throw new TypeError(`interaction '${interactionId}' has an invalid world-object model`);
     }
+    const character = raw.character ? {
+        characterId: clean(raw.character.characterId, 64),
+        yaw: finite(raw.character.yaw, 0, -360000, 360000),
+        scale: finite(raw.character.scale, 1, 0.01, 100),
+        label: clean(raw.character.label, 48) || undefined,
+    } : undefined;
+    if (character && !/^[A-Za-z0-9_]+$/.test(character.characterId)) {
+        throw new TypeError(`interaction '${interactionId}' has an invalid character id`);
+    }
     return Object.freeze({
         id: interactionId,
         resource,
@@ -104,7 +113,8 @@ function normalizeInteraction<P>(raw: HmpInteractionDefinition<P>): HmpInteracti
         position: Object.freeze({ x: Number(position.x), y: Number(position.y), z: Number(position.z) }),
         radius,
         promptDistance: finite(raw.promptDistance, radius, 25, radius),
-        promptOffsetZ: finite(raw.promptOffsetZ, 100, -1000, 5000),
+        // A character's prompt is a "press F here" cue at chest height; a bare zone keeps the taller default.
+        promptOffsetZ: finite(raw.promptOffsetZ, raw.character ? 40 : 100, -1000, 5000),
         priority: Math.trunc(finite(raw.priority, 0, -100000, 100000)),
         virtualWorld: raw.virtualWorld === undefined ? undefined : Math.trunc(finite(raw.virtualWorld, 0, 0, 2147483647)),
         areaId: clean(raw.areaId, 128) || undefined,
@@ -114,6 +124,7 @@ function normalizeInteraction<P>(raw: HmpInteractionDefinition<P>): HmpInteracti
         requirements: requirements(raw.requirements),
         progress: progress(raw.progress),
         object: object ? Object.freeze(object) : undefined,
+        character: character ? Object.freeze(character) : undefined,
         handler: typeof raw.handler === "function" ? raw.handler : undefined,
         options: Object.freeze(options),
     });

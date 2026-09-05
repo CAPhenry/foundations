@@ -411,6 +411,21 @@ declare global {
         }): unknown;
         destroy(key: string): boolean;
     };
+    const Character: {
+        create(key: string, characterId: string, options: {
+            x?: number;
+            y?: number;
+            z?: number;
+            yaw?: number;
+            scale?: number;
+            label?: string;
+            promptText?: string;
+            promptHeight?: number;
+            promptRange?: number;
+        }): unknown;
+        destroy(key: string): boolean;
+        isAllowed(characterId: string): boolean;
+    };
     const Creator: {
         open(): void;
         isOpen(): boolean;

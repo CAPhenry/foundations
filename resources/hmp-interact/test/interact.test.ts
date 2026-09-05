@@ -35,6 +35,8 @@ function setup() {
     const emitted: Array<{ event: string; args: unknown[] }> = [];
     const created: Array<{ key: string; model: string | number; options: unknown }> = [];
     const destroyed: string[] = [];
+    const charactersCreated: Array<{ key: string; characterId: string; options: unknown }> = [];
+    const charactersDestroyed: string[] = [];
     let failedCreates = 0;
     const service = createInteractService<TestPlayer>({
         core: {
@@ -55,11 +57,16 @@ function setup() {
             create(key, model, options) { if (failedCreates-- > 0) throw new Error("world object unavailable"); created.push({ key, model, options }); return {}; },
             destroy(key) { destroyed.push(key); return true; },
         },
+        characters: {
+            create(key, characterId, options) { if (characterId === "Peeves") return undefined; charactersCreated.push({ key, characterId, options }); return {}; },
+            destroy(key) { charactersDestroyed.push(key); return true; },
+        },
         logger: { info() {}, warn() {}, error() {} },
         now: () => clock,
     });
     return {
         service, first, second, groups, items, notifications, menus, progresses, emitted, created, destroyed,
+        charactersCreated, charactersDestroyed,
         choose(value: string | null) { menuChoice = value; },
         completeProgress(value: boolean) { progressResult = value; },
         advance(milliseconds: number) { clock += milliseconds; },
@@ -119,6 +126,36 @@ test("registers owned zones, publishes optional props and cleans up safely", () 
     assert.strictEqual(dispose(), true);
     assert.strictEqual(dispose(), false);
     assert.deepStrictEqual(state.destroyed, ["hmp-interact:wardrobe", "hmp-interact:wardrobe"]);
+});
+
+test("publishes an optional character at the zone position and destroys it with the zone", () => {
+    const state = setup();
+    const dispose = state.service.register({
+        id: "shop.ollivander",
+        resource: "hmp-shops",
+        label: "Browse wands",
+        position: { x: 10, y: 20, z: 30 },
+        character: { characterId: "GerboldOllivander", yaw: 90, label: "  Gerbold Ollivander " },
+        handler() {},
+    });
+    assert.deepStrictEqual(state.charactersCreated, [{
+        key: "hmp-interact:shop.ollivander",
+        characterId: "GerboldOllivander",
+        options: { x: 10, y: 20, z: 30, yaw: 90, scale: 1, label: "Gerbold Ollivander", promptHeight: 100 },
+    }]);
+    assert.strictEqual(state.created.length, 0);
+    assert.strictEqual(state.service.get("shop.ollivander")?.promptOffsetZ, 40);
+    assert.throws(() => state.service.register({
+        id: "shop.refused", resource: "hmp-shops", label: "Refused", position: { x: 0, y: 0, z: 0 },
+        character: { characterId: "Peeves" }, handler() {},
+    }), /was refused/);
+    assert.throws(() => normalizeInteraction({
+        id: "shop.bad", resource: "hmp-shops", label: "Bad", position: { x: 0, y: 0, z: 0 },
+        character: { characterId: "/Game/Not.An_Id" }, handler() {},
+    }), /invalid character id/);
+    assert.strictEqual(dispose(), true);
+    assert.deepStrictEqual(state.charactersDestroyed, ["hmp-interact:shop.ollivander"]);
+    assert.deepStrictEqual(state.destroyed, []);
 });
 
 test("rejects forged distance and requirements, then applies cooldown after execution", async () => {

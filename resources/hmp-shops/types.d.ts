@@ -1,4 +1,5 @@
 import type {
+    HmpInteractionCharacter,
     HmpInteractionGroupRequirement,
     HmpInteractionItemRequirement,
     HmpInteractionWorldObject,
@@ -61,6 +62,8 @@ export interface HmpShopInteraction<P = HmpShopPlayer> {
     priority?: number;
     virtualWorld?: number;
     object?: HmpInteractionWorldObject;
+    /** Stationary dressed vendor body standing at `position`; the shop's stock is what it sells. */
+    character?: HmpInteractionCharacter;
 }
 
 export interface HmpShopDefinition<P = HmpShopPlayer> {

@@ -70,6 +70,15 @@ export interface HmpInteractionWorldObject {
     collision?: boolean;
 }
 
+export interface HmpInteractionCharacter {
+    /** Human registry character id, e.g. "GerboldOllivander". Must pass `Character.isAllowed`. */
+    characterId: string;
+    yaw?: number;
+    scale?: number;
+    /** Nameplate drawn above the head. */
+    label?: string;
+}
+
 export interface HmpInteractionDefinition<P = HmpInteractPlayer> {
     id: string;
     /** Owning resource, used for safe cleanup when it stops. */
@@ -96,6 +105,8 @@ export interface HmpInteractionDefinition<P = HmpInteractPlayer> {
     progress?: HmpInteractionProgress;
     /** Spawn a replicated Framework WorldObject owned by this interaction. */
     object?: HmpInteractionWorldObject;
+    /** Spawn a replicated Framework Character (dressed, stationary human) at `position`, owned by this interaction. */
+    character?: HmpInteractionCharacter;
     handler?(context: HmpInteractionContext<P>): unknown | Promise<unknown>;
     options?: ReadonlyArray<HmpInteractionOption<P>>;
 }

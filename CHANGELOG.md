@@ -18,6 +18,13 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
 - Spell providers and stable `provider:spell` slot references support registered modded gameplay
   names through the native HUD, plus explicit API casting of plugin-owned spell records. Existing
   raw gameplay names and record paths are normalized without clearing stored assignments.
+- `hmp-interact` registrations can own a replicated Framework `Character`: a dressed, stationary human
+  built from an allowlisted registry id, standing at the zone's own position. Character prompts default
+  to chest height and an optional `label` draws a nameplate; the README lists the accepted ids.
+- `hmp-shops` forwards an optional `interaction.character` to `hmp-interact`, so a shop registers its
+  vendor body together with its stock. A closed-testing potion vendor (Parry Pippin) stands on the
+  Hogsmeade high street with limited stock.
+- Player Administration shows the target's yaw beside their position.
 
 ### Changed
 
@@ -35,6 +42,11 @@ pre-`1.0.0` policy documented in [COMPATIBILITY.md](COMPATIBILITY.md#version-pol
 
 - Update the HogwartsMP client alongside Foundations for native `spellAssignment` events, live-slot
   reads, and restoration event suppression. Foundations adds no custom spell HUD or casting key bindings.
+- Character bodies need a HogwartsMP client and server with the `Character` entity (mod commit
+  `ae40d769369025738266235899f9a27ff2ac1f08`; nameplate heights follow mod commit
+  `49cb74a45cdeb7b30e0d7d4980f7eb935604671f`).
+- `player.location().yaw` read `-0.0` before HogwartsMP mod commit
+  `4431e1e8e046c4032ba2fe16f9b06288058cfe03`; the admin Yaw row needs that server build.
 
 ## [0.3.0] - 2026-09-02
 
