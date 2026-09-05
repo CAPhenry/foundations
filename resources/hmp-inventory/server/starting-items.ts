@@ -29,7 +29,10 @@ function createStartingItemsGrant(entries: StartingItemEntry[], deps: StartingIt
         pending.delete(characterId);
         for (const entry of configured) {
             try {
-                await deps.inventory.api.add(player, entry.name, entry.amount, entry.metadata ? { metadata: entry.metadata } : {});
+                await deps.inventory.api.add(player, entry.name, entry.amount, {
+                    identified: true,
+                    ...(entry.metadata ? { metadata: entry.metadata } : {}),
+                });
             } catch (error: unknown) {
                 const message = error instanceof Error ? error.message : String(error);
                 deps.logger.warn(`Could not grant starting item '${entry.name}' to character #${characterId}: ${message}`);
